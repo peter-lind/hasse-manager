@@ -127,7 +127,10 @@ namespace HasseManager
                     w = w.Replace( ":", "");
                     if (!string.IsNullOrEmpty(w))
                     {
-                        HDM.InsertElementIntoHasseDiagram(new StringHasseNode(w, HasseNode.HasseNodeTypes.REAL, elements));
+                        HasseNode NewNode = new StringHasseNode(w, HasseNode.HasseNodeTypes.REAL, elements);
+                        HDM.InsertElementIntoHasseDiagram(NewNode);
+                        if (w.Contains ("s"))
+                        HDM.RemoveElementFromHasseDiagram(NewNode); 
                     }
                 }
 
@@ -142,15 +145,13 @@ namespace HasseManager
 
             // 20 microseconds to loop 1000 objects and assign
             // 40 microseconds to add 1000 elements to new list
-            for (int j=0;j<1000000;j++){
-                List<HasseNode> l = new List<HasseNode>();
-                foreach (HasseNode h in HDM.AllHasseNodes.Values)
-                    l.Add (h);
-               // h.NodeType = HasseNode.HasseNodeTypes.FRAGMENT   ;
-            }
-            HDM.Draw();
+            //HDM.Draw();
+            sw.Reset()  ;
+            sw.Start();
+            string Report = HasseDiagramStats.Report(HDM.AllHasseNodes);
+            System.Diagnostics.Debug.WriteLine(sw.ElapsedMilliseconds.ToString()); 
+            System.Diagnostics.Debug.WriteLine(Report);
             System.Diagnostics.Debug.WriteLine(HDM.AllHasseNodes.Count.ToString() + " objects");
-            //count - 1
 
 
         }

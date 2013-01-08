@@ -157,15 +157,36 @@ namespace HasseManager
         {
             bool dbgTimings = Convert.ToBoolean(DEBUGLEVEL & LOG_ALL_TIMINGS);
             bool dbgComparisons = Convert.ToBoolean(DEBUGLEVEL & LOG_ALL_COMPARISON_COUNTS);
-            HasseNodeCollection correctGLB = BruteForceFindGlb(newNode, AllHasseNodes);
-            HasseNodeCollection correctLub = BruteForceFindLub(newNode, AllHasseNodes);
+            //HasseNodeCollection correctGLB = BruteForceFindGlb(newNode, AllHasseNodes);
+            //HasseNodeCollection correctLub = BruteForceFindLub(newNode, AllHasseNodes);
+
+           HasseNodeCollection correctGLB = FindGlb(newNode, AllHasseNodes);
+            HasseNodeCollection correctLub = FindLub(newNode, AllHasseNodes);
+
+            //HasseValidation.CheckCollectionsHaveSameObjects(correctGLB, correctGLB2);
+            //HasseValidation.CheckCollectionsHaveSameObjects(correctLub, correctLub2);
             glb = correctGLB;
             lub = correctLub;
         }
 
 
+        public void RemoveElementFromHasseDiagram(HasseNode Node)
+        {
+            HasseNodeCollection glb_x = new HasseNodeCollection();
+            HasseNode[] covered = Node.NodesCovered().Values.ToArray ();
+            HasseNode[] covering = Node.NodesCovering().Values.ToArray();
 
-
+            foreach (HasseNode Covered in covered)
+            {
+                BreakCoverRelation(Covered, Node);
+                foreach (HasseNode Covering in covering)
+                {
+                    BreakCoverRelation (Node,Covering);
+                    MakeCoverRelation(Covered, Covering, false);
+                }
+            }
+            AllHasseNodes.Remove(Node.UniqueString ); 
+        }
 
 
         public void InsertElementIntoHasseDiagram(HasseNode newNode)
@@ -453,6 +474,98 @@ namespace HasseManager
 
             return (glb);
         }
+
+        public static HasseNodeCollection FindGlb(HasseNode ReferenceNode, HasseNodeCollection AllNodes)
+        {
+            bool dbg = Convert.ToBoolean(DEBUGLEVEL & LOG_DEBUG_MAKE_GLB);
+            HasseNodeCollection glb = new HasseNodeCollection();
+            List<string> ToBeRemoved = new List<string>();
+            foreach (HasseNode Node in AllNodes.Values)
+            {
+                if (!ToBeRemoved.Contains(Node.UniqueString))
+                {
+                    System.Diagnostics.Debug.WriteLineIf(dbg, "test if " + ReferenceNode.UniqueString + " is larger than " + Node.UniqueString   );
+                    if (ReferenceNode.IsLargerThan(Node))
+                    {
+                        System.Diagnostics.Debug.WriteLineIf(dbg, " yes - is glb candidate, delete below...");
+                        glb.Add(Node.UniqueString, Node);
+                        DeleteNodesBelow(Node, ToBeRemoved, 0);
+                    }
+                 /*   else if (Node.IsLargerThan(ReferenceNode))
+                    {
+                        DeleteNodesAbove(Node, ToBeRemoved, 0);
+                    }
+                  */
+                    else ToBeRemoved.Add(Node.UniqueString ); 
+                }
+
+            }
+
+            foreach (string key in ToBeRemoved)
+            {
+                glb.Remove(key);
+            }
+
+            return (glb);
+        }
+
+        private static void DeleteNodesBelow(HasseNode Node, List<string> ToBeRemoved, int level) {
+        foreach (HasseNode N in Node.NodesCovered().Values   ){
+           if (!ToBeRemoved.Contains (N.UniqueString ))
+               DeleteNodesBelow(N, ToBeRemoved, level + 1);
+        }
+        if (level>0)ToBeRemoved.Add(Node.UniqueString ); 
+        }
+
+
+
+
+
+        public static HasseNodeCollection FindLub(HasseNode ReferenceNode, HasseNodeCollection AllNodes)
+        {
+            bool dbg = Convert.ToBoolean(DEBUGLEVEL & LOG_DEBUG_MAKE_LUB);
+            HasseNodeCollection lub = new HasseNodeCollection();
+            List<string> ToBeRemoved = new List<string>();
+            foreach (HasseNode Node in AllNodes.Values)
+            {
+                if (!ToBeRemoved.Contains(Node.UniqueString))
+                {
+                    System.Diagnostics.Debug.WriteLineIf(dbg, "test if " + Node.UniqueString + " is larger than " + ReferenceNode.UniqueString);
+                    if (Node.IsLargerThan(ReferenceNode))
+                    {
+                        System.Diagnostics.Debug.WriteLineIf(dbg, " yes - is lub candidate, delete above...");
+                        lub.Add(Node.UniqueString, Node);
+                        DeleteNodesAbove(Node, ToBeRemoved, 0);
+                    }
+                    /*
+                     else if (ReferenceNode.IsLargerThan(Node))
+                    {
+                        DeleteNodesBelow(Node, ToBeRemoved, 0);
+                    }
+                     */
+                    else ToBeRemoved.Add(Node.UniqueString); 
+
+                }
+            }
+
+            foreach (string key in ToBeRemoved)
+            {
+                lub.Remove(key);
+            }
+
+            return (lub);
+        }
+
+        private static void DeleteNodesAbove(HasseNode Node, List<string> ToBeRemoved, int level)
+        {
+            foreach (HasseNode N in Node.NodesCovering().Values)
+            {
+                if (!ToBeRemoved.Contains(N.UniqueString))
+                    DeleteNodesAbove(N, ToBeRemoved, level + 1);
+            }
+            if (level > 0) ToBeRemoved.Add(Node.UniqueString);
+        }
+
 
 
 
