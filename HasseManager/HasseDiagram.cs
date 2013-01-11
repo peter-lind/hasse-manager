@@ -55,6 +55,7 @@ namespace HasseManager
         public const int DEBUGLEVEL = LOG_NOTHING;
         public const int CHECK_LEVEL = CHECK_NOTHING;
         public bool MAKE_MCS_AT_ONCE = true;
+       public bool MAKE_LABELLED_NODES = true;
 
         // ==========================================
 
@@ -157,15 +158,11 @@ namespace HasseManager
         {
             bool dbgTimings = Convert.ToBoolean(DEBUGLEVEL & LOG_ALL_TIMINGS);
             bool dbgComparisons = Convert.ToBoolean(DEBUGLEVEL & LOG_ALL_COMPARISON_COUNTS);
-            //HasseNodeCollection correctGLB = BruteForceFindGlb(newNode, AllHasseNodes);
-            //HasseNodeCollection correctLub = BruteForceFindLub(newNode, AllHasseNodes);
-
-           HasseNodeCollection correctGLB = FindGlb(newNode, AllHasseNodes);
-            HasseNodeCollection correctLub = FindLub(newNode, AllHasseNodes);
-
-            //HasseValidation.CheckCollectionsHaveSameObjects(correctGLB, correctGLB2);
-            //HasseValidation.CheckCollectionsHaveSameObjects(correctLub, correctLub2);
-            glb = correctGLB;
+            HasseNodeCollection correctGLB = BruteForceFindGlb(newNode, AllHasseNodes);
+            HasseNodeCollection correctLub = BruteForceFindLub(newNode, AllHasseNodes);
+            
+			
+			glb = correctGLB;
             lub = correctLub;
         }
 
@@ -197,7 +194,7 @@ namespace HasseManager
             sw.Start();
             //caution - make sure we avoid try to add identical objects
 
-            if (newNode.UniqueString.Equals(""))
+            if (newNode.UniqueString.Equals("XB1"))
             {
                 System.Diagnostics.Debugger.Break();
             }
@@ -331,7 +328,10 @@ namespace HasseManager
             {
                 System.Diagnostics.Debug.WriteLineIf(dbg, "cover (I)  " + v_low.UniqueString + " with " + newNode.UniqueString);
                 MakeCoverRelation(v_low, newNode, dbg = debug);
-                v_low.makeLabelledObjects(newNode, ref processingQueue, ref AllHasseNodes);
+                if (MAKE_LABELLED_NODES == true)
+                {
+                    v_low.makeLabelledNodes(newNode, ref processingQueue, ref AllHasseNodes);
+                }
             }
 
             //make relations between new and LUBs
@@ -339,7 +339,10 @@ namespace HasseManager
             {
                 System.Diagnostics.Debug.WriteLineIf(dbg, "cover (II) " + newNode.UniqueString + " with " + v_high.UniqueString);
                 MakeCoverRelation(newNode, v_high, dbg = debug);
-                newNode.makeLabelledObjects(v_high, ref processingQueue, ref AllHasseNodes);
+                if (MAKE_LABELLED_NODES == true)
+                {
+                    newNode.makeLabelledNodes(v_high, ref processingQueue, ref AllHasseNodes);
+                }
             }
 
         }

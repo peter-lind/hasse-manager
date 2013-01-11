@@ -17,6 +17,7 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA. 
 */
 
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -140,7 +141,7 @@ namespace HasseManager
         public abstract bool IsIdenticalTo(HasseNode elm);
         public abstract bool IsLargerThan(HasseNode smallobj);
         public abstract string UniqueString { get; }
-        public abstract void makeLabelledObjects(HasseNode Node2, ref System.Collections.Queue q, ref HasseNodeCollection existingNodes);
+        public abstract void makeLabelledNodes(HasseNode Node2, ref System.Collections.Queue q, ref HasseNodeCollection existingNodes);
         public abstract void makeMaxCommonSubStruc(HasseNode Node1, HasseNode Node2, bool dbg, ref System.Collections.Queue q, HasseNodeCollection GlobalHasseVertexNodeCollection);
         protected abstract HasseNodeCollection makeElementarySubobjects(HasseNodeCollection GlobalHasseVertexObjectCollection);
 

@@ -1,4 +1,5 @@
-﻿/*
+﻿
+/*
 HasseManager - a program for construction and mining of Hasse diagrams.
 Copyright (C) 2012  Peter Lind
 
@@ -37,13 +38,18 @@ namespace HasseManager
         private string str = "";
         //private int m_elementcount;
         // private HasseVertexNodeCollection m_elementarysubobjects;
-        const bool DEBUG_LABELLED_OBJECTS = false;
-        const bool DEBUG_NEW = false;
+        const bool DEBUG_LABELLED_OBJECTS = true;
+        const bool DEBUG_NEW = true;
 
         public StringHasseNode(string s, HasseNodeTypes ElementType, HasseNodeCollection globalElementCollection)
             : base(ElementType, globalElementCollection)
         {
 
+
+   
+            // TODO remove this check
+            if (s.Contains("**")) { throw new Exception("double stars"); }
+                
 
             if (string.IsNullOrEmpty(s))
                 throw new Exception("new empty string");
@@ -85,9 +91,9 @@ namespace HasseManager
                             {
                                 leftoffs += 1;
                                 if (pos1 - leftoffs < 0)
-                                    break;
+                                    break; // TODO: might not be correct. Was : Exit Do
                                 if (pos2 - leftoffs < 0)
-                                    break;
+                                    break; // TODO: might not be correct. Was : Exit Do
                             } while (!(!str1.Substring(pos1 - leftoffs, 1).Equals(str2.Substring(pos2 - leftoffs, 1))));
                             leftoffs -= 1;
 
@@ -97,9 +103,9 @@ namespace HasseManager
                             {
                                 rightoffs += 1;
                                 if (pos1 + rightoffs >= str1.Length)
-                                    break;
+                                    break; // TODO: might not be correct. Was : Exit Do
                                 if (pos2 + rightoffs >= str2.Length)
-                                    break;
+                                    break; // TODO: might not be correct. Was : Exit Do
                             } while (!(!str1.Substring(pos1 + rightoffs, 1).Equals(str2.Substring(pos2 + rightoffs, 1))));
                             rightoffs -= 1;
 
@@ -120,32 +126,39 @@ namespace HasseManager
                         }
                         else
                         {
-                            break;
+                            break; // TODO: might not be correct. Was : Exit Do
                         }
                     } while (true);
 
                 }
                 else
                 {
-                    break;
+                    break; // TODO: might not be correct. Was : Exit Do
                 }
             } while (true);
 
         }
 
-        // As HasseElement()
-        public override void makeLabelledObjects(HasseNode Node2, ref System.Collections.Queue q, ref HasseNodeCollection existingNodes)
-        {
+       
 
+
+        public override void makeLabelledNodes(HasseNode Node2, ref System.Collections.Queue q, ref HasseNodeCollection existingNodes)
+        {
             //the Node of the argument should be the larger object 
             //can result in several objects, like both *A and A*
 
+            String ShorterString = this.str;        //for readability
             StringHasseNode chrNode2 = (StringHasseNode)Node2;
-            string Node2Str = chrNode2.str;
-            //get the string representation
+            string LongerString = chrNode2.str;     //for readability
+            String TrimmedShortString = ShorterString.Replace("*", "");
 
+
+           // if (ShorterString.Contains("*"))
+             //   System.Diagnostics.Debugger.Break();    
+            
+            
             //find position(s) of substring in string og larger Node
-            int pos = Node2Str.IndexOf(str);
+            int pos = LongerString.IndexOf(TrimmedShortString);
             //Dim arrlistLabelledObjects As ArrayList = New ArrayList
             Debug.WriteLineIf(DEBUG_LABELLED_OBJECTS, "make labelled objects between " + this.UniqueString + " and " + Node2.UniqueString + " ...");
 
@@ -157,17 +170,17 @@ namespace HasseManager
                 //largestr:  AXB
                 //pos:       012
 
-                //substring based on smaller string str
-                string newstring = str;
-                // take this string and attach star to left if appropriate
-                if (pos > 0)
+                //substring based on ShorterString - add stars as appropriate
+                string newstring = TrimmedShortString;
+
+                if (pos > 0)  // star to left?
                     newstring = "*" + newstring;
-                // also attach star to right if appropriate
-                if (str.Length + pos < Node2Str.Length)
+
+                if (ShorterString.Length + pos < LongerString.Length) // star to right?
                     newstring = newstring + "*";
 
-                //  strip star and put back
-                if (!newstring.Equals(this.UniqueString))
+
+                if (!newstring.Equals(ShorterString))  // is it not what we started with?
                 {
                     if (!existingNodes.ContainsKey(newstring))
                     {
@@ -178,13 +191,15 @@ namespace HasseManager
                     }
                 }
 
+                // something on left side?
                 //substring based on larger string minus smaller - left side
                 if (pos > 0)
                 {
-                    string leftStr = Node2Str.Substring(0, pos);
+                    string leftStr = LongerString.Substring(0, pos);
                     if ((leftStr.Length >0) && (!leftStr.Equals("*"))) /*if not empty or a star only*/
                     {
-                        if (!leftStr.StartsWith ("*") )leftStr += "*"; /*then add a star if not already at start*/
+                       // if (!leftStr.StartsWith ("*") )leftStr += "*"; /*then add a star if not already at start*/
+                         leftStr += "*"; /*then add a star if not already at start*/
                         if (!existingNodes.ContainsKey(leftStr))
                         {  /*create new node, put this in queue for insert into Hasse diagram*/
                             StringHasseNode newNodeLeft = new StringHasseNode(leftStr, HasseNodeTypes.FRAGMENT, existingNodes);
@@ -195,13 +210,14 @@ namespace HasseManager
                     }
                 }
 
-                //substring based on larger string minus smaller - right side
-                if (pos < (Node2Str.Length - 1))
+
+                if (pos + ShorterString.Length   <= (LongerString.Length - 1))  // there are one or more chars on right side
                 {
-                    string rightStr = Node2Str.Substring(pos + str.Length);
+                    string rightStr = LongerString.Substring(pos + ShorterString.Length);
                     if ((rightStr.Length > 0) && (!rightStr.Equals("*"))) /*if not empty or a star only*/
                     {
-                       if (!rightStr.EndsWith ("*") ) rightStr += "*"; /*then add a star if already in end*/
+                       //if (!rightStr.EndsWith ("*") ) rightStr += "*"; /*then add a star if already in end*/
+                         rightStr = "*" + rightStr ; /*then add a star if already in end*/
                         if (!existingNodes.ContainsKey(rightStr))
                         {
                             StringHasseNode newNodeRight = new StringHasseNode(rightStr, HasseNodeTypes.FRAGMENT, existingNodes);
@@ -211,7 +227,7 @@ namespace HasseManager
                         }
                     }
                 }
-                pos = Node2Str.IndexOf(str, pos + 1);
+                pos = LongerString.IndexOf(TrimmedShortString, pos + 1);
             }
         }
 
@@ -251,6 +267,7 @@ namespace HasseManager
                     GlobalHasseNodeCollection.Add(buf, element);
                 }
 
+                //todo change to better names for elements collections
                 if (!elmobjects.ContainsKey(buf))
                     elmobjects.Add(buf, element);
             }
