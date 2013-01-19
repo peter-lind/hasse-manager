@@ -20,18 +20,27 @@ namespace HasseManager
                   DotFile.WriteLine("{");
                   //DotFile.WriteLine("size =\"4,5\";");
         }
-        private void WriteEdge(HasseNode Node1,HasseNode Node2)
+        private void WriteEdge(HasseEdge E)
         {
-            if ((Node1.UniqueString.Contains ("\"") ) || (Node2.UniqueString.Contains ("\"") )){
+            HasseNode Node1 = E.LowerNode;
+            HasseNode Node2 = E.UpperNode ;
+            if ((Node1.KeyString.Contains ("\"") ) || (Node2.KeyString.Contains ("\"") )){
             throw new Exception ("disallowed character: double quote");
             }
 
             DotFile.Write("\"");
-            DotFile.Write(Node1.UniqueString);
+            if (Node1.NodeType == HasseNode.HasseNodeTypes.ROOT)
+            {
+                DotFile.Write("{Ø}");
+            }
+            else
+            {
+                DotFile.Write(Node1.KeyString);
+            }
             DotFile.Write("\"");
             DotFile.Write(" -> ");
             DotFile.Write("\"");
-            DotFile.Write(Node2.UniqueString);
+            DotFile.Write(Node2.KeyString);
             DotFile.Write("\"");
             DotFile.WriteLine(";");
         }
@@ -43,13 +52,16 @@ namespace HasseManager
 
         public void WriteDotFile()
         {
+            List<HasseNode> Nodes;
+            Nodes = NodeCollection.Values.ToList();
+            Nodes.Sort();
+
             OpenFile("C:\\temp\\testdotfile1.dot");
-            foreach (HasseNode Node in NodeCollection.Values )
+            foreach (HasseNode Node in Nodes )
             {
-                foreach (HasseNode Node2 in Node.NodesCovering().Values)
+                foreach (HasseEdge E in Node.EdgesToCovering )
                 {
-                    //if (Node.NodeType != HasseNode.HasseNodeTypes.ELEMENT)  
-                    WriteEdge(Node, Node2);
+                    WriteEdge(E);
                 }
             }
             CloseFile();

@@ -38,20 +38,27 @@ namespace HasseManager
         private string str = "";
         //private int m_elementcount;
         // private HasseVertexNodeCollection m_elementarysubobjects;
-        const bool DEBUG_LABELLED_OBJECTS = true;
-        const bool DEBUG_NEW = true;
+        const bool DEBUG_LABELLED_OBJECTS = false;
+        const bool DEBUG_NEW = false;
+
+
 
         public StringHasseNode(string s, HasseNodeTypes ElementType, HasseNodeCollection globalElementCollection)
             : base(ElementType, globalElementCollection)
         {
 
 
-   
+
             // TODO remove this check
             if (s.Contains("**")) { throw new Exception("double stars"); }
-                
 
-            if (string.IsNullOrEmpty(s))
+            if (s.Equals ("~~~~~~"))
+            {
+                System.Diagnostics.Debugger.Break();
+            }
+
+
+            if (string.IsNullOrEmpty(s) && (this.NodeType != HasseNode.HasseNodeTypes.ROOT )   )
                 throw new Exception("new empty string");
             Debug.WriteLineIf(DEBUG_NEW, "                                          created  " + s);
 
@@ -66,83 +73,106 @@ namespace HasseManager
         }
 
 
-        public override void makeMaxCommonSubStruc(HasseNode Node1, HasseNode Node2, bool dbg, ref System.Collections.Queue q, HasseNodeCollection GlobalHasseVertexNodeCollection)
+        public override void GetMaxCommonFragments(HasseNode Node1, HasseNode Node2, bool dbg, ref System.Collections.Queue q, HasseNodeCollection GlobalElementCollection)
         {
             // this Node is known to be subNode on both Node1 and Node2
             // it can match several places
 
-            string strSeed = this.UniqueString;
-            string str1 = Node1.UniqueString;
-            string str2 = Node2.UniqueString;
-            int pos1 = -1;
-            do
+            int MinimumOverlap = 4;  
+            string strSeed = this.KeyString.Replace("*", "");
+            string str1 = Node1.KeyString;
+            string str2 = Node2.KeyString;
+
+
+            int pos1 = str1.IndexOf(strSeed);
+            while (pos1 > -1) //localise matches in Node1
             {
-                pos1 = str1.IndexOf(strSeed, pos1 + 1);
-                if (pos1 > 0)
+                int pos2 = str2.IndexOf(strSeed);
+
+                while (pos2 > -1)  //localise matches in Node2
                 {
-                    int pos2 = -1;
+                    int leftoffs = 0;
                     do
+                    { // perhaps there is match also to the left of where seed and str1/str2 match ?
+                        leftoffs += 1;
+                        if (pos1 - leftoffs < 0) //before start of string 1
+                            break;
+                        if (pos2 - leftoffs < 0) //before start of string 2
+                            break;
+                    } while (str1.Substring(pos1 - leftoffs, 1).Equals(str2.Substring(pos2 - leftoffs, 1)));
+                    leftoffs -= 1; //move back one step to where it last was ok
+
+                    int rightoffs = 0;
+                    do
+                    { // perhaps there is match also to the right of where seed and str1/str2 match ?
+                        rightoffs += 1;
+                        if (pos1 + rightoffs >= str1.Length) // after end of string 1
+                            break;
+                        if (pos2 + rightoffs >= str2.Length) // after end of string 2
+                            break;
+                    } while (str1.Substring(pos1 + rightoffs, 1).Equals(str2.Substring(pos2 + rightoffs, 1)));
+                    rightoffs -= 1; //move back one step to where it last was ok
+
+                    string s = str1.Substring(pos1 - leftoffs, 1 + leftoffs + rightoffs);
+
+
+                    if (s.Length >= MinimumOverlap ) 
                     {
-                        pos2 = str2.IndexOf(strSeed, pos2 + 1);
-                        if (pos2 > 0)
+                        // star to left? Both strings must then have one pos matching star
+                        if (pos1 - leftoffs > 0 && pos2 - leftoffs > 0) 
+                        { s = "*" + s; }
+                        // star to right? Both strings must then have one pos matching star
+                        if ((pos1 + rightoffs < str1.Length-1) && (pos2 + rightoffs < str2.Length-1)) s = s + "*";
+                        StringHasseNode newNode = new StringHasseNode(s, HasseNodeTypes.FRAGMENT, GlobalElementCollection);
+                        Debug.WriteLineIf(dbg, " created MCS of " + str1 + " and " + str2 + ": " + s);
+                        if (newNode.KeyString.Equals("*")) { System.Diagnostics.Debugger.Break(); }
+                        q.Enqueue(newNode);
+
+                        //+ strSeed.Length
+                        //pos1 left - do we have one or more chars to left? last is not star?
+                        if (pos1 - leftoffs    > 0 && (!str1.Substring(pos1 - leftoffs - 1, 1).Equals("*")))
                         {
-                            int leftoffs = 0;
-                            do
-                            {
-                                leftoffs += 1;
-                                if (pos1 - leftoffs < 0)
-                                    break; // TODO: might not be correct. Was : Exit Do
-                                if (pos2 - leftoffs < 0)
-                                    break; // TODO: might not be correct. Was : Exit Do
-                            } while (!(!str1.Substring(pos1 - leftoffs, 1).Equals(str2.Substring(pos2 - leftoffs, 1))));
-                            leftoffs -= 1;
-
-
-                            int rightoffs = 0;
-                            do
-                            {
-                                rightoffs += 1;
-                                if (pos1 + rightoffs >= str1.Length)
-                                    break; // TODO: might not be correct. Was : Exit Do
-                                if (pos2 + rightoffs >= str2.Length)
-                                    break; // TODO: might not be correct. Was : Exit Do
-                            } while (!(!str1.Substring(pos1 + rightoffs, 1).Equals(str2.Substring(pos2 + rightoffs, 1))));
-                            rightoffs -= 1;
-
-                            string s = str1.Substring(pos1 - leftoffs, 1 + leftoffs + rightoffs);
-
-                            //exit on this trivial case
-                            if (s.Equals(this.UniqueString))
-                                continue;
-
-
-                            StringHasseNode newNode = new StringHasseNode(s, HasseNodeTypes.FRAGMENT, GlobalHasseVertexNodeCollection);
-                            Debug.WriteLineIf(dbg, " created MCS of " + str1 + " and " + str2 + ": " + s);
-                            //arrlistLabelledNodes.Add(newNode)
-                            if (newNode.UniqueString.Equals ("*")){System.Diagnostics.Debugger.Break();} 
-                            q.Enqueue(newNode);
-
-
+                            string sl1 = str1.Substring(0, pos1) + "*";
+                            StringHasseNode newNodeL1 = new StringHasseNode(sl1, HasseNodeTypes.FRAGMENT, GlobalElementCollection);
+                            q.Enqueue(newNodeL1);
                         }
-                        else
+
+                        //pos2 left
+                        if (pos2 - leftoffs > 0 && (!str2.Substring(pos2 - leftoffs - 1, 1).Equals("*")))
                         {
-                            break; // TODO: might not be correct. Was : Exit Do
+                            string sl2 = str2.Substring(0, pos2) + "*";
+                            StringHasseNode newNodeL2 = new StringHasseNode(sl2, HasseNodeTypes.FRAGMENT, GlobalElementCollection);
+                            q.Enqueue(newNodeL2);
                         }
-                    } while (true);
 
+                        //pos1 right
+                        if (pos1 + rightoffs+1 < str1.Length && (!str1.Substring(pos1 + rightoffs+1,1).Equals ("*")))
+                        {
+                            string sr1 = "*" + str1.Substring(pos1 + rightoffs+1);
+                            StringHasseNode newNodeR1 = new StringHasseNode(sr1, HasseNodeTypes.FRAGMENT, GlobalElementCollection);
+                            q.Enqueue(newNodeR1);
+                        }
+                        //pos2 right
+                        if (pos2 + rightoffs+1 < str2.Length && (!str2.Substring(pos2 + rightoffs+1, 1).Equals("*")))
+                        {
+                            string sr2 = "*" + str2.Substring(pos2 + rightoffs+1);
+                            StringHasseNode newNodeR2 = new StringHasseNode(sr2, HasseNodeTypes.FRAGMENT, GlobalElementCollection);
+                            q.Enqueue(newNodeR2);
+                        }
+
+
+                    }
+                    pos2 = str2.IndexOf(strSeed, pos2 + 1);
                 }
-                else
-                {
-                    break; // TODO: might not be correct. Was : Exit Do
-                }
-            } while (true);
+                pos1 = str1.IndexOf(strSeed, pos1 + 1);
+            }
 
         }
 
-       
 
 
-        public override void makeLabelledNodes(HasseNode Node2, ref System.Collections.Queue q, ref HasseNodeCollection existingNodes)
+
+        public override void GetDifferenceFragments(HasseNode Node2, ref System.Collections.Queue q, ref HasseNodeCollection existingNodes)
         {
             //the Node of the argument should be the larger object 
             //can result in several objects, like both *A and A*
@@ -153,14 +183,14 @@ namespace HasseManager
             String TrimmedShortString = ShorterString.Replace("*", "");
 
 
-           // if (ShorterString.Contains("*"))
-             //   System.Diagnostics.Debugger.Break();    
-            
-            
+            // if (ShorterString.Contains("*"))
+            //   System.Diagnostics.Debugger.Break();    
+
+
             //find position(s) of substring in string og larger Node
             int pos = LongerString.IndexOf(TrimmedShortString);
             //Dim arrlistLabelledObjects As ArrayList = New ArrayList
-            Debug.WriteLineIf(DEBUG_LABELLED_OBJECTS, "make labelled objects between " + this.UniqueString + " and " + Node2.UniqueString + " ...");
+            Debug.WriteLineIf(DEBUG_LABELLED_OBJECTS, "make labelled objects between " + this.KeyString + " and " + Node2.KeyString + " ...");
 
             while (pos > -1)
             {
@@ -176,7 +206,7 @@ namespace HasseManager
                 if (pos > 0)  // star to left?
                     newstring = "*" + newstring;
 
-                if (ShorterString.Length + pos < LongerString.Length) // star to right?
+                if (TrimmedShortString.Length + pos < LongerString.Length) // star to right?
                     newstring = newstring + "*";
 
 
@@ -186,7 +216,7 @@ namespace HasseManager
                     {
                         StringHasseNode newNode = new StringHasseNode(newstring, HasseNodeTypes.FRAGMENT, existingNodes);
                         Debug.WriteLineIf(DEBUG_LABELLED_OBJECTS, " created labelled object: " + newstring);
-                       if (newNode.UniqueString.Equals ("*")){System.Diagnostics.Debugger.Break();} 
+                        if (newNode.KeyString.Equals("*")) { System.Diagnostics.Debugger.Break(); }
                         q.Enqueue(newNode);
                     }
                 }
@@ -196,34 +226,34 @@ namespace HasseManager
                 if (pos > 0)
                 {
                     string leftStr = LongerString.Substring(0, pos);
-                    if ((leftStr.Length >0) && (!leftStr.Equals("*"))) /*if not empty or a star only*/
+                    if ((leftStr.Length > 0) && (!leftStr.Equals("*"))) /*if not empty or a star only*/
                     {
-                       // if (!leftStr.StartsWith ("*") )leftStr += "*"; /*then add a star if not already at start*/
-                         leftStr += "*"; /*then add a star if not already at start*/
+                        // if (!leftStr.StartsWith ("*") )leftStr += "*"; /*then add a star if not already at start*/
+                        leftStr += "*"; /*then add a star if not already at start*/
                         if (!existingNodes.ContainsKey(leftStr))
                         {  /*create new node, put this in queue for insert into Hasse diagram*/
                             StringHasseNode newNodeLeft = new StringHasseNode(leftStr, HasseNodeTypes.FRAGMENT, existingNodes);
                             Debug.WriteLineIf(DEBUG_LABELLED_OBJECTS, " created left labelled object: " + leftStr);
-                            if (newNodeLeft.UniqueString.Equals ("*")){System.Diagnostics.Debugger.Break();} 
+                            if (newNodeLeft.KeyString.Equals("*")) { System.Diagnostics.Debugger.Break(); }
                             q.Enqueue(newNodeLeft);
                         }
                     }
                 }
 
 
-                if (pos + ShorterString.Length   <= (LongerString.Length - 1))  // there are one or more chars on right side
+                if (pos + ShorterString.Length <= (LongerString.Length - 1))  // there are one or more chars on right side
                 {
                     string rightStr = LongerString.Substring(pos + ShorterString.Length);
                     if ((rightStr.Length > 0) && (!rightStr.Equals("*"))) /*if not empty or a star only*/
                     {
-                       //if (!rightStr.EndsWith ("*") ) rightStr += "*"; /*then add a star if already in end*/
-                         rightStr = "*" + rightStr ; /*then add a star if already in end*/
+                        //if (!rightStr.EndsWith ("*") ) rightStr += "*"; /*then add a star if already in end*/
+                        rightStr = "*" + rightStr; /*then add a star if already in end*/
                         if (!existingNodes.ContainsKey(rightStr))
                         {
-                            StringHasseNode newNodeRight = new StringHasseNode(rightStr, HasseNodeTypes.FRAGMENT, existingNodes);
-                            Debug.WriteLineIf(DEBUG_LABELLED_OBJECTS, " created right labelled object: " + rightStr);
-                            if (newNodeRight.UniqueString.Equals("*")) { System.Diagnostics.Debugger.Break(); }
-                            q.Enqueue(newNodeRight);
+                            //StringHasseNode newNodeRight = new StringHasseNode(rightStr, HasseNodeTypes.FRAGMENT, existingNodes);
+                            //Debug.WriteLineIf(DEBUG_LABELLED_OBJECTS, " created right labelled object: " + rightStr);
+                            //if (newNodeRight.UniqueString.Equals("*")) { System.Diagnostics.Debugger.Break(); }
+                            //q.Enqueue(newNodeRight);
                         }
                     }
                 }
@@ -249,6 +279,7 @@ namespace HasseManager
             //watch out for infinite recursion as we are called from New and also may call New
 
             HasseNodeCollection elmobjects = new HasseNodeCollection();
+            if (this.NodeType == HasseNodeTypes.ROOT  ) return (elmobjects);
             int i = 0;
             string str2 = str.Replace("*", "");
             for (i = 0; i <= str2.Length - 1; i++)
@@ -278,7 +309,7 @@ namespace HasseManager
 
         public override bool IsIdenticalTo(HasseNode Node)
         {
-            if (this.str.Equals(Node.UniqueString))
+            if (this.str.Equals(Node.KeyString))
             {
                 return true;
             }
@@ -290,9 +321,13 @@ namespace HasseManager
 
 
         public override bool IsLargerThan(HasseNode smallHasseElement)
+
         {
+            if (this.NodeType == HasseNodeTypes.ROOT) return false;           
+            if (smallHasseElement.NodeType == HasseNodeTypes.ROOT) return true;
+ 
 #if DEBUG
-            if (this.UniqueString.Equals("DB") && smallHasseElement.UniqueString.Equals("D"))
+            if (this.KeyString.Equals("DB") && smallHasseElement.KeyString.Equals("D"))
             {
                 //System.Diagnostics.Debugger.Break();
             }
@@ -322,18 +357,14 @@ namespace HasseManager
             if (smallHasseElement.elementCount > this.elementCount)
             {
                 // must be smaller
-                Debug.WriteLineIf(DBG, this.UniqueString + " is not larger than " + smallHasseElement.UniqueString + " (0)");
-                return false;
-            }
-            if (!this.ContainsAllElementsIn(smallHasseElement.getElementarySubobjects()))
-            {
-                Debug.WriteLineIf(DBG, this.UniqueString + " is incomparable to, or smaller than " + smallHasseElement.UniqueString + " (I)");
+                Debug.WriteLineIf(DBG, this.KeyString + " is not larger than " + smallHasseElement.KeyString + " (0)");
                 return false;
             }
 
+
             StringHasseNode smallStringHasseNode = (StringHasseNode)smallHasseElement;
             //remove stars    
-            string SmallString=smallStringHasseNode.str;
+            string SmallString = smallStringHasseNode.str;
             string StrippedSmallString = SmallString.Replace("*", "");
 
 
@@ -346,13 +377,13 @@ namespace HasseManager
             {
                 if (str.Contains(StrippedSmallString) && StrippedSmallString.Length < str.Length)
                 {
-                    Debug.WriteLineIf(DBG, this.UniqueString + " is larger than " + smallHasseElement.UniqueString + " (II)");
+                    Debug.WriteLineIf(DBG, this.KeyString + " is larger than " + smallHasseElement.KeyString + " (II)");
                     WasLargerThan += 1;
                     return true;
                 }
                 else
                 {
-                    Debug.WriteLineIf(DBG, this.UniqueString + " is not larger than " + smallHasseElement.UniqueString + " (III)");
+                    Debug.WriteLineIf(DBG, this.KeyString + " is not larger than " + smallHasseElement.KeyString + " (III)");
                     return false;
                 }
             }
@@ -361,21 +392,22 @@ namespace HasseManager
             // small string has stars, different rules
             // find occurrences of small string in large string.
             int offset = 0;
-            offset=str.IndexOf(StrippedSmallString);
-            while (offset != -1 && (offset <= str.Length)  )
+            offset = str.IndexOf(StrippedSmallString);
+            while (offset != -1 && (offset <= str.Length))
             {
 
-                Boolean IsMatch = TestStringMappingForMatch(str,SmallString, StrippedSmallString, offset);
-                if (IsMatch) {
-                    Debug.WriteLineIf(DBG, this.UniqueString + " is larger than " + smallHasseElement.UniqueString + " (IV)");
+                Boolean IsMatch = TestStringMappingForMatch(str, SmallString, StrippedSmallString, offset);
+                if (IsMatch)
+                {
+                    Debug.WriteLineIf(DBG, this.KeyString + " is larger than " + smallHasseElement.KeyString + " (IV)");
                     WasLargerThan += 1;
                     return true;
                 }
-                offset = str.IndexOf(StrippedSmallString, offset +1 );
-            } 
+                offset = str.IndexOf(StrippedSmallString, offset + 1);
+            }
 
 
-            Debug.WriteLineIf(DBG, this.UniqueString + " is not larger than " + smallHasseElement.UniqueString + " (V)");
+            Debug.WriteLineIf(DBG, this.KeyString + " is not larger than " + smallHasseElement.KeyString + " (V)");
             return false;
         }
 
@@ -390,42 +422,45 @@ namespace HasseManager
             }
 #endif
 
-            
+
             Boolean StarToLeft = SmallString.StartsWith("*");
             Boolean StarToRight = SmallString.EndsWith("*");
-            Boolean StarToLeftAndRight = StarToLeft && StarToRight ;
-            
-                if (StarToLeftAndRight){
-                    if (offset != 0) /* something for left star*/
-                        if (str.Length > (offset + StrippedSmallString.Length)) /*something for right star*/
+            Boolean StarToLeftAndRight = StarToLeft && StarToRight;
 
-                        if (!((str[offset-1].Equals ('*'))&&(str[offset + StrippedSmallString.Length].Equals('*'))))
-                        return true;    
-                
-                }
-                else if (StarToLeft) {
-                    if (offset != 0)/* something for left star..*/
-                    { 
-                        if (!str[offset - 1].Equals('*')) /* something other than also star */ return true;
-                        /* at this point we know we have a match, but do we have larger than? */
-                        if (str.Length >= (offset + SmallString.Length))return true;
-                    }
-                }
-                else if (StarToRight) {
-                    if (str.Length > (offset + StrippedSmallString.Length))/*something for right star.. */
-                    {
-                        if (!str[offset + StrippedSmallString.Length].Equals('*')) /* something other than also star*/
+            if (StarToLeftAndRight)
+            {
+                if (offset != 0) /* something for left star*/
+                    if (str.Length > (offset + StrippedSmallString.Length)) /*something for right star*/
+
+                        if (!((str[offset - 1].Equals('*')) && (str[offset + StrippedSmallString.Length].Equals('*'))))
                             return true;
-                        /* at this point we know we have a match, but do we have larger than? */
-                        if (offset > 0) return true;
-                    }
-                }
 
-                return false;
+            }
+            else if (StarToLeft)
+            {
+                if (offset != 0)/* something for left star..*/
+                {
+                    if (!str[offset - 1].Equals('*')) /* something other than also star */ return true;
+                    /* at this point we know we have a match, but do we have larger than? */
+                    if (str.Length >= (offset + SmallString.Length)) return true;
+                }
+            }
+            else if (StarToRight)
+            {
+                if (str.Length > (offset + StrippedSmallString.Length))/*something for right star.. */
+                {
+                    if (!str[offset + StrippedSmallString.Length].Equals('*')) /* something other than also star*/
+                        return true;
+                    /* at this point we know we have a match, but do we have larger than? */
+                    if (offset > 0) return true;
+                }
+            }
+
+            return false;
         }
 
 
-        public override string UniqueString
+        public override string KeyString
         {
             get { return str; }
         }

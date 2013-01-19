@@ -25,21 +25,26 @@ using System.Text;
 
 namespace HasseManager
 {
-    public abstract class HasseNode
+    public abstract class HasseNode : IComparable 
     {
         public enum HasseNodeTypes
         {
             // A node can have more than one type, use bitwise AND or OR.
+            ROOT = 0,
             ELEMENT = 1,
             FRAGMENT = 2,
             REAL = 4
         }
 
-        //private HasseVertexObjectCollection allElements;
-        private HasseNodeCollection m_NodesCovering = new HasseNodeCollection();
-        private HasseNodeCollection m_NodesCovered = new HasseNodeCollection();
-        private HasseNodeCollection m_incomingNodesFrom = new HasseNodeCollection();
-        private HasseNodeCollection m_outgoingNodesTo = new HasseNodeCollection();
+
+        public  List<HasseEdge> EdgesToCovering = new List<HasseEdge>();
+        public List<HasseEdge> EdgesToCovered = new List<HasseEdge>();
+
+
+        //private HasseNodeCollection m_NodesCovering = new HasseNodeCollection();
+        //private HasseNodeCollection m_NodesCovered = new HasseNodeCollection();
+        //private HasseNodeCollection m_incomingNodesFrom = new HasseNodeCollection();
+        //private HasseNodeCollection m_outgoingNodesTo = new HasseNodeCollection();
 
         // elementary objects to be instantiated lazily when needed
         private HasseNodeCollection m_elementarysubobjects;
@@ -83,26 +88,26 @@ namespace HasseManager
 
         public bool validate()
         {
-            foreach (HasseNode cover in m_NodesCovering.Values)
+            foreach (HasseEdge cover in EdgesToCovering  )
             {
-                foreach (HasseNode _cover in m_NodesCovering.Values)
+                foreach (HasseEdge _cover in EdgesToCovered )
                 {
-                    if ((!object.ReferenceEquals(cover, _cover)))
+                    if ((!object.ReferenceEquals(cover.UpperNode , _cover.UpperNode )))
                     {
-                        if (cover.IsLargerThan(_cover))
+                        if (cover.UpperNode .IsLargerThan(_cover.UpperNode ))
                         {
-                            throw new Exception(this.UniqueString + " has two comparable covers : " + cover.UniqueString + " and " + _cover.UniqueString);
+                            throw new Exception(this.KeyString + " has two comparable covers : " + cover.UpperNode . KeyString + " and " + _cover.UpperNode .KeyString);
                         }
                     }
                 }
             }
-            foreach (HasseNode covered in m_NodesCovered.Values)
+            foreach (HasseEdge covered in EdgesToCovered )
             {
-                foreach (HasseNode _covered in m_NodesCovering.Values)
+                foreach (HasseEdge _covered in EdgesToCovered )
                 {
-                    if (covered.IsLargerThan(_covered))
+                    if (covered.LowerNode  .IsLargerThan(_covered.LowerNode ))
                     {
-                        throw new Exception(this.UniqueString + " is covering two comparable objects: " + covered.UniqueString + " " + _covered.UniqueString);
+                        throw new Exception(this.KeyString + " is covering two comparable objects: " + covered.LowerNode  .KeyString + " " + _covered.LowerNode  . KeyString);
                     }
                 }
             }
@@ -110,6 +115,18 @@ namespace HasseManager
             return true;
         }
 
+        /*
+        public List<HasseEdge> EdgesUp()
+        {
+            return _EdgesToCovering;
+        }
+
+        public List<HasseEdge> EdgesDown()
+        {
+            return _EdgesToCovered;
+        }
+        *)
+        /*
         public HasseNodeCollection NodesCovering()
         {
             return (m_NodesCovering);
@@ -119,7 +136,8 @@ namespace HasseManager
         {
             return (m_NodesCovered);
         }
-
+        */
+        /*
         public HasseNodeCollection IncomingNodesFrom()
         {
             return (m_incomingNodesFrom);
@@ -129,6 +147,7 @@ namespace HasseManager
         {
             return (m_outgoingNodesTo);
         }
+        */
 
         public abstract int elementCount { get; }
         public abstract bool ContainsAllElementsIn(HasseNodeCollection col);
@@ -140,9 +159,9 @@ namespace HasseManager
 
         public abstract bool IsIdenticalTo(HasseNode elm);
         public abstract bool IsLargerThan(HasseNode smallobj);
-        public abstract string UniqueString { get; }
-        public abstract void makeLabelledNodes(HasseNode Node2, ref System.Collections.Queue q, ref HasseNodeCollection existingNodes);
-        public abstract void makeMaxCommonSubStruc(HasseNode Node1, HasseNode Node2, bool dbg, ref System.Collections.Queue q, HasseNodeCollection GlobalHasseVertexNodeCollection);
+        public abstract string KeyString { get; }
+        public abstract void GetDifferenceFragments(HasseNode Node2, ref System.Collections.Queue q, ref HasseNodeCollection existingNodes);
+        public abstract void GetMaxCommonFragments(HasseNode Node1, HasseNode Node2, bool dbg, ref System.Collections.Queue q, HasseNodeCollection GlobalHasseVertexNodeCollection);
         protected abstract HasseNodeCollection makeElementarySubobjects(HasseNodeCollection GlobalHasseVertexObjectCollection);
 
         public HasseNodeCollection getElementarySubobjects()
@@ -154,7 +173,13 @@ namespace HasseManager
             return m_elementarysubobjects;
         }
 
+        // Implement IComparable CompareTo method - provide default sort order.
+        int IComparable.CompareTo(object node)
+        {
+            HasseNode Node = (HasseNode)node;
+            return String.Compare(this.KeyString , Node.KeyString );
 
+        }
 
         public HasseNode(HasseNodeTypes Type, HasseNodeCollection globalElementCollection)
         {

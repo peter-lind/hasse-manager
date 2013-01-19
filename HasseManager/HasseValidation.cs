@@ -31,13 +31,13 @@ namespace HasseManager
         {
             foreach (HasseNode elm1 in correctLub.Values )
             {
-                if (!c2.ContainsKey(elm1.UniqueString ))
-                    throw new Exception("CheckCompareCollections: missing element: " + elm1.UniqueString);
+                if (!c2.ContainsKey(elm1.KeyString ))
+                    throw new Exception("CheckCompareCollections: missing element: " + elm1.KeyString);
             }
             foreach (HasseNode elm2 in c2.Values )
             {
-                if (!correctLub.ContainsKey(elm2.UniqueString ))
-                    throw new Exception("CheckCompareCollections: extra element" + elm2.UniqueString);
+                if (!correctLub.ContainsKey(elm2.KeyString ))
+                    throw new Exception("CheckCompareCollections: extra element" + elm2.KeyString);
             }
         }
 

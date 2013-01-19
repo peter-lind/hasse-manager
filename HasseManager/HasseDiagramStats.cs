@@ -44,7 +44,7 @@ namespace HasseManager
             {
                 if ((rootnode.NodeType & HasseNode.HasseNodeTypes.ELEMENT)>0)
                 {
-                    NodesOnThisLevel.Add(rootnode.UniqueString, rootnode);
+                    NodesOnThisLevel.Add(rootnode.KeyString, rootnode);
                 }
             }
             sb.AppendLine("Root nodes:    \t" + NodesOnThisLevel.Count.ToString());
@@ -59,15 +59,16 @@ namespace HasseManager
                 foreach (HasseNode node in NodesOnThisLevel.Values)
                 {
                     //sb.AppendLine(node.UniqueString + " "); 
-                    foreach (HasseNode parent in node.NodesCovering().Values)
+                    foreach (HasseEdge EdgeUpToParent in node.EdgesToCovering )
                     {
+                        HasseNode Parent = EdgeUpToParent.UpperNode;
                         CountUpwardEdges++;
-                        if (!NodesOnThisLevelPlusOne.ContainsKey(parent.UniqueString))
+                        if (!NodesOnThisLevelPlusOne.ContainsKey(Parent.KeyString))
                         {
-                            NodesOnThisLevelPlusOne.Add(parent.UniqueString, parent);
+                            NodesOnThisLevelPlusOne.Add(Parent.KeyString, Parent);
                         }
                     }
-                    if (node.NodesCovering().Count == 0)
+                    if (node.EdgesToCovering.Count == 0)
                     { CountTopmostNodes++; }
                 }
                 

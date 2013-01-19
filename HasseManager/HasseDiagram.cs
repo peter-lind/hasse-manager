@@ -28,6 +28,7 @@ namespace HasseManager
 {
     public class HasseDiagram
     {
+        public HasseNode RootNode = null;
         public HasseNodeCollection AllHasseNodes = new HasseNodeCollection();
         HasseNodeCollection ElementaryHasseNodes = new HasseNodeCollection();
         System.Collections.Queue ProcessingQueue = new System.Collections.Queue();
@@ -35,11 +36,12 @@ namespace HasseManager
 
         int CountAdditions = 0;
 
+
         public const int LOG_NOTHING = 0;
         public const int LOG_DEBUG_MAKE_LUB = 1;
         public const int LOG_DEBUG_MAKE_GLB = 2;
-        public const int LOG_DEBUG_INSERT_NEW = 4;
-        public const int LOG_ADDITIONS = 8;
+        public const int LOG_DEBUG_ADD_NEW_ELEMENT = 4;
+        public const int LOG_INSERTIONS = 8;
         public const int LOG_ALL_COMPARISON_COUNTS = 16;
         public const int LOG_DEBUG_ALL = 1 + 2 + 4 + 8;
 
@@ -52,7 +54,8 @@ namespace HasseManager
 
         // ==========================================
         // edit those settings
-        public const int DEBUGLEVEL = LOG_NOTHING;
+        public bool ALWAYS_ADD_ELEMENTS_TO_DIAGRAM = false;
+        public const int DEBUGLEVEL = 4+8;
         public const int CHECK_LEVEL = CHECK_NOTHING;
         public bool MAKE_MCS_AT_ONCE = true;
        public bool MAKE_LABELLED_NODES = true;
@@ -60,6 +63,58 @@ namespace HasseManager
         // ==========================================
 
 
+       public HasseDiagram(HasseNode Root)
+       {
+           RootNode = Root;
+           this.InsertElementIntoHasseDiagram(RootNode);
+       }
+
+       public int DeleteNodesWithOneCover()
+       {
+           List<HasseNode> ToBeRemoved = new List<HasseNode>();
+           foreach (HasseNode N in AllHasseNodes.Values)
+           {
+              if (N.EdgesToCovering.Count ==1 ) { ToBeRemoved.Add(N); }
+           }
+           int Count = ToBeRemoved.Count(); 
+           foreach (HasseNode N in ToBeRemoved)
+           {
+               ContractNodeWithCover(N);
+           }
+           return ToBeRemoved.Count(); 
+       }
+ 
+
+       public void ContractNodeWithCover(HasseNode Node)
+       {
+           // Node should have exactly one cover. 
+           // Edges from covered are moved to go to the cover = (break and form)
+           // Finally Node is deleted
+           
+
+          // make list of currently covered nodes
+           //List<HasseNode> CoveredNodes = new List<HasseNode>();
+             // foreach(HasseEdge E in Node.EdgesToCovered ){
+             // CoveredNodes.Add (E.LowerNode ); 
+             // }
+              
+           HasseEdge[] EdgesDownToCovered = Node.EdgesToCovered.ToArray();  
+                    
+           HasseNode TopNode = Node.EdgesToCovering[0].UpperNode;  
+
+           System.Diagnostics.Debug.WriteLine ("ContractNodeWithCover: " + Node.KeyString);
+           System.Diagnostics.Debug.WriteLine("Covered by: " + TopNode.KeyString);
+
+           foreach (HasseEdge EdgeToCovered in EdgesDownToCovered)
+          {
+              System.Diagnostics.Debug.WriteLine("Moving edge from : " + EdgeToCovered.LowerNode.KeyString);
+              MakeEdgeIfNotExists( EdgeToCovered.LowerNode  , TopNode);              
+               RemoveEdge(EdgeToCovered);
+              //BreakCoverRelation(CoveredNode, Node);
+              //MakeCoverRelationIfNotExists  (CoveredNode, TopNode);
+          }
+          AllHasseNodes.Remove(Node.KeyString); 
+       }
 
 
         public void ContractChains()
@@ -69,52 +124,52 @@ namespace HasseManager
             List<HasseNode> ToBeRemoved = new List<HasseNode>();
             foreach (HasseNode Node in AllHasseNodes.Values)
             {
-                if (!VisitedNodes.ContainsKey(Node.UniqueString))
+                if (!VisitedNodes.ContainsKey(Node.KeyString))
                 {
-                    if (Node.NodesCovered().Count == 1 && Node.NodesCovering().Count == 1)
+                    if (Node.EdgesToCovered.Count == 1 && Node.EdgesToCovering.Count == 1)
                     {
                         ToBeRemoved.Add(Node);
                     }
-                    VisitedNodes.Add(Node.UniqueString, Node);
+                    VisitedNodes.Add(Node.KeyString, Node);
                 }
             }
 
             //now contract nodes A-B-C to form A-C, then throw away B
             foreach (HasseNode Node in ToBeRemoved)
             {
-                HasseNode Node1 = null;
-                HasseNode Node2 = null;
-                // it is only one!
-                foreach (HasseNode o1 in Node.NodesCovered().Values) { Node1 = o1; }
-                // it is only one!
-                foreach (HasseNode o2 in Node.NodesCovering().Values) { Node2 = o2; }
+                HasseNode Node1 = Node.EdgesToCovered[0].LowerNode;
+                HasseNode Node2 = Node.EdgesToCovering[0].UpperNode;
+                this.MakeEdge(Node1, Node2);
+                this.RemoveEdge(Node.EdgesToCovered[0]);
+                this.RemoveEdge(Node.EdgesToCovering[0]);
 
-                this.BreakCoverRelation(Node1, Node);
-                this.BreakCoverRelation(Node, Node2);
-                this.MakeCoverRelation(Node1, Node2, false);
-                System.Diagnostics.Debug.WriteLine("contract  [" + Node1.UniqueString + "]-[" + Node.UniqueString + "]-[" + Node2.UniqueString + "]");
-                AllHasseNodes.Remove(Node.UniqueString);
+                //this.BreakCoverRelation(Node1, Node);
+                //this.BreakCoverRelation(Node, Node2);
+                //this.MakeCoverRelation(Node1, Node2, false);
+              
+                //System.Diagnostics.Debug.WriteLine("contract  [" + Node1.KeyString + "]-[" + Node.KeyString + "]-[" + Node2.KeyString + "]");
+                AllHasseNodes.Remove(Node.KeyString);
             }
         }
 
 
         public void ContractChains2()
         {
-            HasseNodeCollection VisitedNodes = new HasseNodeCollection();
             // identify vertices with one edge out, put them on remove list
+            HasseNodeCollection VisitedNodes = new HasseNodeCollection();
             List<HasseNode> ToBeRemoved = new List<HasseNode>();
             foreach (HasseNode Node in AllHasseNodes.Values)
             {
-                if (!VisitedNodes.ContainsKey(Node.UniqueString))
+                if (!VisitedNodes.ContainsKey(Node.KeyString))
                 {
-                    if (Node.NodesCovering().Count == 1)
+                    if (Node.EdgesToCovering.Count == 1)
                     {
-                        foreach (HasseNode TheCoveringNode in Node.NodesCovering().Values){
-                        if (TheCoveringNode.NodesCovered().Count==1 )
+                        foreach (HasseEdge TheCoveringEdge in Node.EdgesToCovering){
+                        if (TheCoveringEdge.UpperNode.EdgesToCovered.Count==1 )
                         ToBeRemoved.Add(Node);
                         }
                     }
-                    VisitedNodes.Add(Node.UniqueString, Node);
+                    VisitedNodes.Add(Node.KeyString, Node);
                 }
             }
 
@@ -122,136 +177,140 @@ namespace HasseManager
             // B must inherit innodes as into A, then throw away A
             foreach (HasseNode Node in ToBeRemoved)
             {
-                HasseNode NodeCovering = null;
-                HasseNode Node2 = null;
-                // it is only one!
-                foreach (HasseNode o1 in Node.NodesCovering().Values)
-                { NodeCovering = o1;}
-                
-                    
-                    System.Diagnostics.Debug.WriteLine("contract  [" + Node.UniqueString + "]-[" + NodeCovering.UniqueString + "]");
-                    this.BreakCoverRelation(Node, NodeCovering);
+                HasseEdge EdgeUpToCovering = Node.EdgesToCovering[0];
+                HasseNode NodeCovering = EdgeUpToCovering.UpperNode;
+                //HasseNode Node2 = null;
+                                   
+                    System.Diagnostics.Debug.WriteLine("contract  [" + Node.KeyString + "]-[" + NodeCovering.KeyString + "]");
+                    RemoveEdge(EdgeUpToCovering);  
+                //this.BreakCoverRelation(Node, NodeCovering);
 
-                    // make list of covered nodes
-                    List<HasseNode> CoveredNodes = new List<HasseNode>();
-                    foreach (HasseNode o2 in Node.NodesCovered().Values)
-                        CoveredNodes.Add(o2);
+                    // make list of edges to covered 
+                    HasseEdge [] EdgesToCovered = Node.EdgesToCovered.ToArray (); 
 
-                    foreach (HasseNode o2 in CoveredNodes)
+                    foreach (HasseEdge E2 in EdgesToCovered)
                     {
-                        Node2 = o2;
+                        HasseNode Node2 = E2.LowerNode ;
+                       // Node2 = o2;
                         // inherit edges from those that Node covers
-                        this.MakeCoverRelation(Node2, NodeCovering, false);
-                        this.BreakCoverRelation(Node, Node2);
-
+                        this.MakeEdge(Node2, NodeCovering);
+                        //this.MakeCoverRelation(Node2, NodeCovering, false);
+                        this.RemoveEdge(E2);
+                        //this.BreakCoverRelation(Node, Node2);
                     }
-
-                
-                AllHasseNodes.Remove(Node.UniqueString);
+                AllHasseNodes.Remove(Node.KeyString);
             }
         }
 
 
 
 
-        public void FindLUBAndGLB(HasseNode newNode, ref HasseNodeCollection lub, ref HasseNodeCollection glb)
+        public void FindLUBAndGLB(HasseNode newNode, ref HasseNodeCollection lub,ref HasseNodeCollection glb)
         {
             bool dbgTimings = Convert.ToBoolean(DEBUGLEVEL & LOG_ALL_TIMINGS);
             bool dbgComparisons = Convert.ToBoolean(DEBUGLEVEL & LOG_ALL_COMPARISON_COUNTS);
-            HasseNodeCollection correctGLB = BruteForceFindGlb(newNode, AllHasseNodes);
-            HasseNodeCollection correctLub = BruteForceFindLub(newNode, AllHasseNodes);
-            
-			
-			glb = correctGLB;
-            lub = correctLub;
+            glb = BruteForceFindGlb(newNode, AllHasseNodes);
+            lub = BruteForceFindLub(newNode, AllHasseNodes);
         }
 
 
         public void RemoveElementFromHasseDiagram(HasseNode Node)
         {
-            HasseNodeCollection glb_x = new HasseNodeCollection();
-            HasseNode[] covered = Node.NodesCovered().Values.ToArray ();
-            HasseNode[] covering = Node.NodesCovering().Values.ToArray();
+            //HasseNodeCollection glb_x = new HasseNodeCollection();
+            HasseEdge[] CoveredEdges = Node.EdgesToCovered.ToArray();
+            HasseEdge[] CoveringEdges = Node.EdgesToCovering.ToArray();
 
-            foreach (HasseNode Covered in covered)
+            // form the new edges;
+            foreach (HasseEdge CoveredEdge in CoveredEdges)
             {
-                BreakCoverRelation(Covered, Node);
-                foreach (HasseNode Covering in covering)
+                foreach (HasseEdge CoveringEdge in CoveringEdges)
                 {
-                    BreakCoverRelation (Node,Covering);
-                    MakeCoverRelation(Covered, Covering, false);
+                    MakeEdge(CoveredEdge.LowerNode, CoveringEdge.UpperNode);
                 }
             }
-            AllHasseNodes.Remove(Node.UniqueString ); 
+            // remove all edges involving Node
+            foreach (HasseEdge CoveredEdge in CoveredEdges)
+                RemoveEdge(CoveredEdge);
+            foreach (HasseEdge CoveringEdge in CoveringEdges)
+                RemoveEdge(CoveringEdge);
+            // remove Node from Node dictionary
+            AllHasseNodes.Remove(Node.KeyString ); 
         }
 
 
         public void InsertElementIntoHasseDiagram(HasseNode newNode)
         {
-            bool debug = Convert.ToBoolean(DEBUGLEVEL & LOG_ADDITIONS);
+            bool debug = Convert.ToBoolean(DEBUGLEVEL & LOG_INSERTIONS);
             bool dbgTimings = Convert.ToBoolean(DEBUGLEVEL & LOG_ALL_TIMINGS);
             sw.Reset();
             sw.Start();
             //caution - make sure we avoid try to add identical objects
 
-            if (newNode.UniqueString.Equals("XB1"))
+            if (newNode.KeyString.Equals("~~~~"))
             {
                 System.Diagnostics.Debugger.Break();
             }
 
-            if (AllHasseNodes.ContainsKey(newNode.UniqueString))
+            if (AllHasseNodes.ContainsKey(newNode.KeyString))
             {
-                AllHasseNodes[newNode.UniqueString].AddNodeType(newNode.NodeType);
-                System.Diagnostics.Debug.WriteLineIf(debug, " Skipping add of " + newNode.UniqueString);
+                AllHasseNodes[newNode.KeyString].AddNodeType(newNode.NodeType);
+                System.Diagnostics.Debug.WriteLineIf(debug, " Skipping add of " + newNode.KeyString);
                 return;
             }
             CountAdditions += 1;
             if (DEBUGLEVEL > 0)
-                System.Diagnostics.Debug.WriteLine("Add Node " + newNode.UniqueString + " " + CountAdditions.ToString());
+                System.Diagnostics.Debug.WriteLine("Add Node " + newNode.KeyString + " " + CountAdditions.ToString());
 
+            
+            
+                foreach (HasseNode newObjectElement in newNode.getElementarySubobjects().Values)
+                {
+                    if (ALWAYS_ADD_ELEMENTS_TO_DIAGRAM)
+                    {
+                        if (!AllHasseNodes.ContainsKey(newObjectElement.KeyString))
+                            AllHasseNodes.Add(newObjectElement.KeyString, newObjectElement);
+                    }
 
-            foreach (HasseNode newObjectElement in newNode.getElementarySubobjects().Values)
-            {
-                if (!AllHasseNodes.ContainsKey(newObjectElement.UniqueString))
-                    AllHasseNodes.Add(newObjectElement.UniqueString, newObjectElement);
+                    if (!ElementaryHasseNodes.ContainsKey(newObjectElement.KeyString))
+                        ElementaryHasseNodes.Add(newObjectElement.KeyString, newObjectElement);
 
-                if (!ElementaryHasseNodes.ContainsKey(newObjectElement.UniqueString))
-                    ElementaryHasseNodes.Add(newObjectElement.UniqueString, newObjectElement);
+                }
+            
+            /*
 
-            }
             // is this node an elementary node and also real or frag? 
-            if (ElementaryHasseNodes.ContainsKey(newNode.UniqueString))
+            if (ElementaryHasseNodes.ContainsKey(newNode.KeyString))
             // perhaps just added
             {
                 // get type of new node
                 HasseNode.HasseNodeTypes t = newNode.NodeType;
                 // from now on, refer to the existing node:
-                newNode = AllHasseNodes[newNode.UniqueString];
+                newNode = AllHasseNodes[newNode.KeyString];
                 // add type(s) for this node to, for example add  
                 newNode.AddNodeType(t);
             }
-
+            */
 
             System.Diagnostics.Debug.WriteLineIf(dbgTimings, " ticks add 1 (init) " + sw.ElapsedTicks.ToString());
             sw.Reset();
             sw.Start();
 
 
-            System.Diagnostics.Debug.WriteLineIf(debug, "=== Start LUB and GLB for " + newNode.UniqueString + " ===");
-            HasseNodeCollection glb_x = new HasseNodeCollection();
-            HasseNodeCollection lub_x = new HasseNodeCollection();
+            System.Diagnostics.Debug.WriteLineIf(debug, "=== Start LUB and GLB for " + newNode.KeyString + " ===");
 
             if (CountAdditions == -1)
                 System.Diagnostics.Debugger.Break();
 
-            FindLUBAndGLB(newNode, ref lub_x, ref glb_x);
+            HasseNodeCollection NodesInGreatestLowerBound=null ;
+            HasseNodeCollection NodesInLeastUpperBound=null;
+            FindLUBAndGLB(newNode, ref NodesInLeastUpperBound, ref NodesInGreatestLowerBound);
 
             System.Diagnostics.Debug.WriteLineIf(dbgTimings, " ticks 2 (got lub and glb) " + sw.ElapsedTicks.ToString());
             sw.Reset();
             sw.Start();
             System.Diagnostics.Debug.WriteLineIf(debug, "=== Done LUB and GLB =======");
 
-            InsertElementBetweenGlbAndLub(newNode, lub_x, glb_x, ProcessingQueue, debug);
+            InsertElementBetweenGlbAndLub(newNode, NodesInLeastUpperBound, NodesInGreatestLowerBound, ProcessingQueue, debug);
             System.Diagnostics.Debug.WriteLineIf(dbgTimings, " ticks 3 (inserted new) " + sw.ElapsedTicks.ToString());
             sw.Reset();
             sw.Start();
@@ -260,6 +319,7 @@ namespace HasseManager
                 newNode.validate();
 
 
+            /*
             if (MAKE_MCS_AT_ONCE)
             {
                 if (newNode.NodesCovering().Count > 1)
@@ -274,7 +334,7 @@ namespace HasseManager
                         {
                             if (j > i)
                             {
-                                newNode.makeMaxCommonSubStruc(covering1, covering2, true, ref ProcessingQueue, AllHasseNodes);
+                                newNode.GetMaxCommonFragments(covering1, covering2, true, ref ProcessingQueue, AllHasseNodes);
                             }
                             j += 1;
                         }
@@ -282,6 +342,40 @@ namespace HasseManager
                     }
                 }
             }
+            */
+
+
+            if (MAKE_MCS_AT_ONCE)
+            {
+                    int i = 1;
+                    foreach (HasseEdge EdgeDownToParent in newNode.EdgesToCovered)
+                    {
+                        HasseNode Parent = EdgeDownToParent.LowerNode;
+                        int j = 1;
+                        foreach (HasseEdge EdgeUpToSibling in EdgeDownToParent.LowerNode.EdgesToCovering)
+                        {
+                            HasseNode Sibling = EdgeUpToSibling.UpperNode;
+                            if (! newNode.Equals (Sibling   )) 
+                            {
+                                if (Parent.NodeType == HasseNode.HasseNodeTypes.ROOT)
+                                {
+                                    foreach (HasseNode Element in newNode.getElementarySubobjects().Values  )   {                                 
+                                        // TODO better efficiency, use with least count elements
+                                        // TODO make debug level for this
+                                        Element.GetMaxCommonFragments(newNode,Sibling , false, ref ProcessingQueue, ElementaryHasseNodes);
+                                    }
+                                }
+                                else
+                                {
+                                    Parent.GetMaxCommonFragments(newNode, Sibling , false, ref ProcessingQueue, ElementaryHasseNodes);
+                                }
+                            }
+                            j += 1;
+                        }
+                        i += 1;
+                    }
+            }
+
 
 
             System.Diagnostics.Debug.WriteLineIf(dbgTimings, " ticks 4 (made MCS)" + sw.ElapsedTicks.ToString());
@@ -297,7 +391,7 @@ namespace HasseManager
 
             // The node may be there already, just added, as element if it is both element and real
             if (!newNode.HasNodeType(HasseNode.HasseNodeTypes.ELEMENT))
-                AllHasseNodes.Add(newNode.UniqueString, newNode);
+                AllHasseNodes.Add(newNode.KeyString, newNode);
 
 
             while (ProcessingQueue.Count > 0)
@@ -311,79 +405,135 @@ namespace HasseManager
 
         private void InsertElementBetweenGlbAndLub(HasseNode newNode, HasseNodeCollection collectionLUB, HasseNodeCollection collectionGLB, System.Collections.Queue processingQueue, bool debug)
         {
-            bool dbg = Convert.ToBoolean(DEBUGLEVEL & LOG_DEBUG_INSERT_NEW);
+            bool dbg = Convert.ToBoolean(DEBUGLEVEL & LOG_INSERTIONS);
 
-            //break any existing relations between LUBs and GLBs
+            // break any existing relations between LUBs and GLBs
+            // first make list of edges to delete
+            List<HasseEdge> EdgesToBeDeleted = new List<HasseEdge>();
             foreach (HasseNode v_low in collectionGLB.Values)
             {
                 foreach (HasseNode v_high in collectionLUB.Values)
                 {
-                    System.Diagnostics.Debug.WriteLineIf(dbg, "cut " + v_low.UniqueString + " - " + v_high.UniqueString);
-                    breakCoverRelationIfExists(v_low, v_high);
+                    System.Diagnostics.Debug.WriteLineIf(dbg, "cut " + v_low.KeyString + " - " + v_high.KeyString);
+                    foreach (HasseEdge E in v_low.EdgesToCovering)
+                    {
+                        if (E.UpperNode == v_high)
+                            EdgesToBeDeleted.Add(E);
+                    }
                 }
             }
-
-            //make relations between GLBs and new
+            foreach (HasseEdge E in EdgesToBeDeleted ){                            
+                RemoveEdge(E);}
+            //make differences between elements and new
+           
             foreach (HasseNode v_low in collectionGLB.Values)
             {
-                System.Diagnostics.Debug.WriteLineIf(dbg, "cover (I)  " + v_low.UniqueString + " with " + newNode.UniqueString);
-                MakeCoverRelation(v_low, newNode, dbg = debug);
-                if (MAKE_LABELLED_NODES == true)
-                {
-                    v_low.makeLabelledNodes(newNode, ref processingQueue, ref AllHasseNodes);
+                System.Diagnostics.Debug.WriteLineIf(dbg, "cover (I)  " + v_low.KeyString + " with " + newNode.KeyString);
+                MakeEdge(v_low, newNode);
+
+                //if (MAKE_LABELLED_NODES == true)
+                //{
+                  //  v_low.GetDifferenceFragments(newNode, ref processingQueue, ref AllHasseNodes);
                 }
-            }
+            
 
             //make relations between new and LUBs
             foreach (HasseNode v_high in collectionLUB.Values)
             {
-                System.Diagnostics.Debug.WriteLineIf(dbg, "cover (II) " + newNode.UniqueString + " with " + v_high.UniqueString);
-                MakeCoverRelation(newNode, v_high, dbg = debug);
+                System.Diagnostics.Debug.WriteLineIf(dbg, "cover (II) " + newNode.KeyString + " with " + v_high.KeyString);
+                MakeEdge(newNode, v_high);
+              /*
                 if (MAKE_LABELLED_NODES == true)
                 {
-                    newNode.makeLabelledNodes(v_high, ref processingQueue, ref AllHasseNodes);
+                    newNode.GetDifferenceFragments(v_high, ref processingQueue, ref AllHasseNodes);
                 }
+               * */
             }
 
         }
 
-
+        /*
 
         private void MakeCoverRelation(HasseNode Node1, HasseNode Node2, bool dbg)
         {
             try
             {
-                Node1.NodesCovering().Add(Node2.UniqueString, Node2);
+                Node1.NodesCovering().Add(Node2.KeyString, Node2);
             }
             catch (ArgumentException ex)
             {
-                Debug.WriteLine(Node2.UniqueString + " already covering " + Node1.UniqueString);
-                throw new Exception(Node2.UniqueString + " already covering " + Node1.UniqueString);
+                Debug.WriteLine(Node2.KeyString + " already covering " + Node1.KeyString);
+                throw new Exception(Node2.KeyString + " already covering " + Node1.KeyString);
             }
             try
             {
-                Node2.NodesCovered().Add(Node1.UniqueString, Node1);
+                Node2.NodesCovered().Add(Node1.KeyString, Node1);
             }
             catch (ArgumentException ex)
             {
-                Debug.WriteLine(Node2.UniqueString + " already covered by " + Node1.UniqueString);
-                throw new Exception(Node2.UniqueString + " already covered by " + Node1.UniqueString);
+                Debug.WriteLine(Node2.KeyString + " already covered by " + Node1.KeyString);
+                throw new Exception(Node2.KeyString + " already covered by " + Node1.KeyString);
             }
         }
 
-        private void BreakCoverRelation(HasseNode Node1, HasseNode Node2)
+        */
+        /*
+        private void MakeCoverRelationIfNotExists(HasseNode Node1, HasseNode Node2)
         {
-            Node1.NodesCovering().Remove(Node2.UniqueString);
-            Node2.NodesCovered().Remove(Node1.UniqueString);
+            if (!Node1.NodesCovering().ContainsKey(Node2.KeyString ) )
+            {
+                Node1.NodesCovering().Add(Node2.KeyString, Node2);
+            }
+            if (!Node2.NodesCovered().ContainsKey(Node1.KeyString))
+            {
+                Node2.NodesCovered().Add(Node1.KeyString, Node1);
+            }
         }
-        private void breakCoverRelationIfExists(HasseNode Node1, HasseNode Node2)
+        */
+
+        private void RemoveEdge(HasseEdge E)
         {
-            if (Node1.NodesCovering().ContainsKey(Node2.UniqueString))
-                Node1.NodesCovering().Remove(Node2.UniqueString);
-            if (Node2.NodesCovered().ContainsKey(Node1.UniqueString))
-                Node2.NodesCovered().Remove(Node1.UniqueString);
+            //remove this edge from upper nodes list of edges down
+            E.UpperNode.EdgesToCovered.Remove(E); 
+            // remove this edge from lower nodes list of edges up
+            E.LowerNode.EdgesToCovering.Remove(E);  
+            E.LowerNode = null;
+            E.UpperNode = null;
+        }
+        private void MakeEdge(HasseNode N1, HasseNode N2)
+        {
+            HasseEdge E = new HasseEdge(); 
+            E.LowerNode =N1;
+            E.UpperNode =N2;
+            N1.EdgesToCovering.Add (E);
+            N2.EdgesToCovered.Add (E); 
         }
 
+        private void MakeEdgeIfNotExists(HasseNode N1, HasseNode N2)
+        {
+            // Todo for max efficiency check if count covered from N2 is lower
+            foreach (HasseEdge E in N1.EdgesToCovering)
+            {
+                if (E.UpperNode ==N2) return;
+            }
+            MakeEdge(N1,N2);
+        }
+
+        /*
+        private void BreakCoverRelation(HasseNode Node1, HasseNode Node2)
+        {
+            Node1.NodesCovering().Remove(Node2.KeyString);
+            Node2.NodesCovered().Remove(Node1.KeyString);
+        }
+         
+        private void breakCoverRelationIfExists(HasseNode Node1, HasseNode Node2)
+        {
+            if (Node1.NodesCovering().ContainsKey(Node2.KeyString))
+                Node1.NodesCovering().Remove(Node2.KeyString);
+            if (Node2.NodesCovered().ContainsKey(Node1.KeyString))
+                Node2.NodesCovered().Remove(Node1.KeyString);
+        }
+        */
 
 
         public void Draw()
@@ -401,10 +551,11 @@ namespace HasseManager
         {
             string spaces = new string('-', level * 2);
             //if (Node.NodesCovering().Values.Count >5  )
-            System.Diagnostics.Debug.WriteLine(Node.weight.ToString() + "\t" + spaces + Node.UniqueString);
-            foreach (HasseNode o in Node.NodesCovering().Values)
+            System.Diagnostics.Debug.WriteLine(Node.weight.ToString() + "\t" + spaces + Node.KeyString);
+            
+            foreach (HasseEdge e in Node.EdgesToCovering)
             {
-                DrawCoveringNodes(level + 1, o);
+                DrawCoveringNodes(level + 1, e.UpperNode );
             }
         }
 
@@ -422,7 +573,7 @@ namespace HasseManager
             {
                 if (Node.IsLargerThan(@ref))
                 {
-                    lub.Add(Node.UniqueString, Node);
+                    lub.Add(Node.KeyString, Node);
                 }
             }
 
@@ -432,7 +583,7 @@ namespace HasseManager
                 {
                     if (Node2.IsLargerThan(Node))
                     {
-                        ToBeRemoved.Add(Node2.UniqueString);
+                        ToBeRemoved.Add(Node2.KeyString);
                         //break;
                     }
                 }
@@ -448,13 +599,15 @@ namespace HasseManager
 
         public static HasseNodeCollection BruteForceFindGlb(HasseNode @ref, HasseNodeCollection AllNodes)
         {
+            if (@ref.KeyString.Equals("x")) { System.Diagnostics.Debugger.Break(); }
+
             HasseNodeCollection glb = new HasseNodeCollection();
             List<string> ToBeRemoved = new List<string>();
             foreach (HasseNode Node in AllNodes.Values)
             {
                 if (@ref.IsLargerThan(Node))
                 {
-                    glb.Add(Node.UniqueString, Node);
+                    glb.Add(Node.KeyString, Node);
                 }
             }
 
@@ -463,9 +616,10 @@ namespace HasseManager
             {
                 foreach (HasseNode Node2 in glb.Values)
                 {
-                    if (Node.IsLargerThan(Node2))
+                    if (Node != Node2)
                     {
-                        ToBeRemoved.Add(Node2.UniqueString);
+                    if (Node.IsLargerThan(Node2))
+                        { ToBeRemoved.Add(Node2.KeyString); }
                         //           break;
                     }
                 }
@@ -485,13 +639,13 @@ namespace HasseManager
             List<string> ToBeRemoved = new List<string>();
             foreach (HasseNode Node in AllNodes.Values)
             {
-                if (!ToBeRemoved.Contains(Node.UniqueString))
+                if (!ToBeRemoved.Contains(Node.KeyString))
                 {
-                    System.Diagnostics.Debug.WriteLineIf(dbg, "test if " + ReferenceNode.UniqueString + " is larger than " + Node.UniqueString   );
+                    System.Diagnostics.Debug.WriteLineIf(dbg, "test if " + ReferenceNode.KeyString + " is larger than " + Node.KeyString   );
                     if (ReferenceNode.IsLargerThan(Node))
                     {
                         System.Diagnostics.Debug.WriteLineIf(dbg, " yes - is glb candidate, delete below...");
-                        glb.Add(Node.UniqueString, Node);
+                        glb.Add(Node.KeyString, Node);
                         DeleteNodesBelow(Node, ToBeRemoved, 0);
                     }
                  /*   else if (Node.IsLargerThan(ReferenceNode))
@@ -499,7 +653,7 @@ namespace HasseManager
                         DeleteNodesAbove(Node, ToBeRemoved, 0);
                     }
                   */
-                    else ToBeRemoved.Add(Node.UniqueString ); 
+                    else ToBeRemoved.Add(Node.KeyString ); 
                 }
 
             }
@@ -513,11 +667,11 @@ namespace HasseManager
         }
 
         private static void DeleteNodesBelow(HasseNode Node, List<string> ToBeRemoved, int level) {
-        foreach (HasseNode N in Node.NodesCovered().Values   ){
-           if (!ToBeRemoved.Contains (N.UniqueString ))
-               DeleteNodesBelow(N, ToBeRemoved, level + 1);
+        foreach (HasseEdge E in Node.EdgesToCovered ){
+           if (!ToBeRemoved.Contains (E.LowerNode.KeyString ))
+               DeleteNodesBelow(E.LowerNode, ToBeRemoved, level + 1);
         }
-        if (level>0)ToBeRemoved.Add(Node.UniqueString ); 
+        if (level>0)ToBeRemoved.Add(Node.KeyString ); 
         }
 
 
@@ -531,13 +685,13 @@ namespace HasseManager
             List<string> ToBeRemoved = new List<string>();
             foreach (HasseNode Node in AllNodes.Values)
             {
-                if (!ToBeRemoved.Contains(Node.UniqueString))
+                if (!ToBeRemoved.Contains(Node.KeyString))
                 {
-                    System.Diagnostics.Debug.WriteLineIf(dbg, "test if " + Node.UniqueString + " is larger than " + ReferenceNode.UniqueString);
+                    System.Diagnostics.Debug.WriteLineIf(dbg, "test if " + Node.KeyString + " is larger than " + ReferenceNode.KeyString);
                     if (Node.IsLargerThan(ReferenceNode))
                     {
                         System.Diagnostics.Debug.WriteLineIf(dbg, " yes - is lub candidate, delete above...");
-                        lub.Add(Node.UniqueString, Node);
+                        lub.Add(Node.KeyString, Node);
                         DeleteNodesAbove(Node, ToBeRemoved, 0);
                     }
                     /*
@@ -546,7 +700,7 @@ namespace HasseManager
                         DeleteNodesBelow(Node, ToBeRemoved, 0);
                     }
                      */
-                    else ToBeRemoved.Add(Node.UniqueString); 
+                    else ToBeRemoved.Add(Node.KeyString); 
 
                 }
             }
@@ -561,12 +715,12 @@ namespace HasseManager
 
         private static void DeleteNodesAbove(HasseNode Node, List<string> ToBeRemoved, int level)
         {
-            foreach (HasseNode N in Node.NodesCovering().Values)
+            foreach (HasseEdge EdgeToCovering in Node.EdgesToCovering)
             {
-                if (!ToBeRemoved.Contains(N.UniqueString))
-                    DeleteNodesAbove(N, ToBeRemoved, level + 1);
+                if (!ToBeRemoved.Contains(EdgeToCovering.UpperNode  .KeyString))
+                    DeleteNodesAbove(EdgeToCovering.UpperNode, ToBeRemoved, level + 1);
             }
-            if (level > 0) ToBeRemoved.Add(Node.UniqueString);
+            if (level > 0) ToBeRemoved.Add(Node.KeyString);
         }
 
 

@@ -27,7 +27,12 @@ namespace HasseManager
 {
     public class HasseNodeCollection : Dictionary <string, HasseNode>
     {
-        public HasseNodeCollection() : base() { }
+
+        public HasseNodeCollection()
+            : base()
+        { 
+            
+        }
 
         /*
         protected override string GetKeyForItem(HasseElement item)
@@ -36,27 +41,42 @@ namespace HasseManager
         }
         */
 
+        public void Sort()
+        {
+            // Todo: this can probably be done without copying all
+            List<HasseNode> Nodes;
+            Nodes = this.Values.ToList();
+            Nodes.Sort();
+            this.Clear();
+            foreach (HasseNode N in Nodes)
+            {
+                this.Add(N.KeyString, N);
+            }
+
+        }
 
         public HasseNodeCollection Clone
         {
             get { return (HasseNodeCollection)this.MemberwiseClone(); }
         }
 
-        public List<HasseNode> AllSiblingsTo(HasseNode ReferenceVertex)
+        public List<HasseNode> AllSiblingsTo(HasseNode ReferenceNode)
         {
             // return the objects which are covered by the covers of this
             
-            Debug.WriteLine("ref: " + ReferenceVertex.UniqueString);
+            Debug.WriteLine("ref: " + ReferenceNode.KeyString);
             List<HasseNode> l = new List<HasseNode>();
             //loop covering
-            foreach (HasseNode covering in ReferenceVertex.NodesCovering().Values )
+            foreach (HasseEdge EdgeToCovering in ReferenceNode.EdgesToCovering  )
             {
-                Debug.WriteLine("covering: " + covering.UniqueString);
-                foreach (HasseNode Sibling in covering.NodesCovered().Values )
+                HasseNode CoveringNode = EdgeToCovering.UpperNode; 
+                Debug.WriteLine("covering: " + CoveringNode.KeyString);
+                foreach (HasseEdge EdgeDownToSibling in CoveringNode.EdgesToCovered  )
                 {
+                    HasseNode Sibling = EdgeDownToSibling.LowerNode; 
                     if (!l.Contains(Sibling))
                     {
-                        Debug.WriteLine("Sibling: " + Sibling.UniqueString);
+                        Debug.WriteLine("Sibling: " + Sibling.KeyString);
                         l.Add(Sibling);
                     }
                 }
@@ -93,6 +113,8 @@ namespace HasseManager
             }
             return null;
         }
+
+
 
     }
 

@@ -27,6 +27,8 @@ namespace HasseManager
 {
     static class  TopologicalSort
     {
+
+        /*
         public static void topsort(HasseNodeCollection Nodes ,bool forward)
         {
             //L <- Empty list were we put the sorted elements
@@ -48,51 +50,40 @@ namespace HasseManager
             AddEdges( Nodes, forward);
             foreach (HasseNode Node in Nodes.Values)
             {
-                if (Node.IncomingNodesFrom().Count == 0)
+                if (Node.EdgesToCovered.Count == 0)
                     Q.Enqueue(Node);
             }
             while (Q.Count > 0)
             {
-                //HasseElement n = (HasseElement)Q.Item(Q.Count);
-                //Q.Remove(Q.Count);
                 HasseNode n = Q.Dequeue();
                 L.Add(n);
-                //make copy of array
 
-                List<HasseNode> OutGoingNodesFrom_n = new List<HasseNode>(n.OutgoingNodesTo().Values);
-                //  HasseElement() = n.OutgoingNodesTo.ToArray
+                //make copy of list
+                List<HasseEdge> OutGoingEdgesFrom_n = new List<HasseEdge>(n.EdgesToCovering);
 
-                foreach (HasseNode m in OutGoingNodesFrom_n)
+                foreach (HasseEdge e in OutGoingEdgesFrom_n)
                 {
-                    n.OutgoingNodesTo().Remove(m.UniqueString);
-                    m.IncomingNodesFrom().Remove(n.UniqueString);
-                    if (m.IncomingNodesFrom().Count == 0)
+                    n.OutgoingNodesTo().Remove(m.KeyString);
+                    e.UpperNode.EdgesToCovered.Remove (    .IncomingNodesFrom().Remove(n.KeyString);
+                    if (e.UpperNode.EdgesToCovered.Count == 0)
                     {
-                        Q.Enqueue(m);
+                        Q.Enqueue(e.UpperNode );
                     }
                 }
 
             }
 
-            foreach (HasseNode o in L)
-            {
-                o.weight += 1;
-
-                foreach (HasseNode parent in o.NodesCovering().Values)
-                {
-                    o.weight += parent.weight;
-                }
-            }
 
             foreach (HasseNode Node in L)
             {
-                System.Diagnostics.Debug.WriteLine(Node.UniqueString);
+                System.Diagnostics.Debug.WriteLine(Node.KeyString);
             }
         }
 
 
+        */
 
-
+        /*
         private static void AddEdges(HasseNodeCollection col, bool forward)
         {
             //this sub is used by Topsort
@@ -106,8 +97,8 @@ namespace HasseManager
                         {
                             if (Node2.IsLargerThan(Node1))
                             {
-                                Node2.IncomingNodesFrom().Add(Node1.UniqueString, Node1);
-                                Node1.OutgoingNodesTo().Add(Node2.UniqueString, Node2);
+                                Node2.IncomingNodesFrom().Add(Node1.KeyString, Node1);
+                                Node1.OutgoingNodesTo().Add(Node2.KeyString, Node2);
                             }
                             //reverse 
                         }
@@ -115,8 +106,8 @@ namespace HasseManager
                         {
                             if (Node1.IsLargerThan(Node2))
                             {
-                                Node2.IncomingNodesFrom().Add(Node1.UniqueString, Node1);
-                                Node1.OutgoingNodesTo().Add(Node2.UniqueString, Node2);
+                                Node2.IncomingNodesFrom().Add(Node1.KeyString, Node1);
+                                Node1.OutgoingNodesTo().Add(Node2.KeyString, Node2);
                             }
                         }
                     }
@@ -124,7 +115,7 @@ namespace HasseManager
             }
         }
 
-
+        */
 
     }
 }

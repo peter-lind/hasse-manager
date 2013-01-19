@@ -39,7 +39,7 @@ namespace HasseManager
         private void button1_Click(object sender, EventArgs e)
         {
             Tester mytester = new Tester();
-            mytester.test6();
+            mytester.test4();
         }
     }
 }
