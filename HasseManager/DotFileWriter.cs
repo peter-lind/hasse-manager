@@ -28,20 +28,26 @@ namespace HasseManager
             throw new Exception ("disallowed character: double quote");
             }
 
-            DotFile.Write("\"");
+            DotFile.Write("\""); // opening quote
             if (Node1.NodeType == HasseNode.HasseNodeTypes.ROOT)
             {
                 DotFile.Write("{Ø}");
             }
             else
             {
-                DotFile.Write(Node1.KeyString);
+                DotFile.Write(Node1.KeyString); // node 1 label
             }
-            DotFile.Write("\"");
-            DotFile.Write(" -> ");
-            DotFile.Write("\"");
-            DotFile.Write(Node2.KeyString);
-            DotFile.Write("\"");
+            DotFile.Write("\""); // closing quote
+            DotFile.Write(" -> "); // arrow
+            DotFile.Write("\"");   // opening quote
+            DotFile.Write(Node2.KeyString);  // node 2 label
+            DotFile.Write("\" ");  // closing quote and space
+            
+            
+            DotFile.Write("[label=\"");
+            DotFile.Write("X");
+            DotFile.Write ("\"]");
+            
             DotFile.WriteLine(";");
         }
         public void CloseFile()

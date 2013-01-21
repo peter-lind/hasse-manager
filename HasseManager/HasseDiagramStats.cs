@@ -29,7 +29,6 @@ namespace HasseManager
         public static String Report(HasseNodeCollection nodes)
         {
 
-
             // how selective are the root nodes?
             // the average root node, how many parents, of all?
 

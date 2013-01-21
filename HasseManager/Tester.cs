@@ -83,7 +83,7 @@ namespace HasseManager
                             throw new Exception ("error in Test3");
                     }
                 }
-                HDM.InsertElementIntoHasseDiagram(new StringHasseNode (buf, HasseNode.HasseNodeTypes.REAL, elements));
+                HDM.InsertNodeIntoDiagram(new StringHasseNode (buf, HasseNode.HasseNodeTypes.REAL, elements));
             }
             //HDM.BFGTopOrder.DebugReport()
             //TopologicalSort.topsort(HDM.AllNodes,true);
@@ -147,7 +147,7 @@ namespace HasseManager
            // Words.Sort();
 
             foreach(string Word in Words){
-                 HDM.InsertElementIntoHasseDiagram(new StringHasseNode(Word, HasseNode.HasseNodeTypes.REAL, elements));
+                 HDM.InsertNodeIntoDiagram(new StringHasseNode(Word, HasseNode.HasseNodeTypes.REAL, elements));
             }
 
             fs.Close();
@@ -192,7 +192,7 @@ namespace HasseManager
                 {
                     buf += "A";
                 }
-                HDM.InsertElementIntoHasseDiagram(new StringHasseNode(buf, HasseNode.HasseNodeTypes.REAL, elements));
+                HDM.InsertNodeIntoDiagram(new StringHasseNode(buf, HasseNode.HasseNodeTypes.REAL, elements));
             }
             //HDM.BFGTopOrder.DebugReport()
             //TopologicalSort.topsort(HDM.AllHasseNodes ,true);
@@ -204,15 +204,15 @@ namespace HasseManager
             HasseDiagram HDM = new HasseDiagram(new StringHasseNode("", HasseNode.HasseNodeTypes.ROOT, null));
             HasseNodeCollection elements = new HasseNodeCollection();
 
-                HDM.InsertElementIntoHasseDiagram(new StringHasseNode("XA0", HasseNode.HasseNodeTypes.REAL, elements));
-                HDM.InsertElementIntoHasseDiagram(new StringHasseNode("XA1", HasseNode.HasseNodeTypes.REAL, elements));
-                HDM.InsertElementIntoHasseDiagram(new StringHasseNode("XB0", HasseNode.HasseNodeTypes.REAL, elements));
-                HDM.InsertElementIntoHasseDiagram(new StringHasseNode("XB1", HasseNode.HasseNodeTypes.REAL, elements));
+                HDM.InsertNodeIntoDiagram(new StringHasseNode("XA0", HasseNode.HasseNodeTypes.REAL, elements));
+                HDM.InsertNodeIntoDiagram(new StringHasseNode("XA1", HasseNode.HasseNodeTypes.REAL, elements));
+                HDM.InsertNodeIntoDiagram(new StringHasseNode("XB0", HasseNode.HasseNodeTypes.REAL, elements));
+                HDM.InsertNodeIntoDiagram(new StringHasseNode("XB1", HasseNode.HasseNodeTypes.REAL, elements));
 
-            HDM.InsertElementIntoHasseDiagram(new StringHasseNode("YA0", HasseNode.HasseNodeTypes.REAL, elements));
-              HDM.InsertElementIntoHasseDiagram(new StringHasseNode("YA1", HasseNode.HasseNodeTypes.REAL, elements));
-               HDM.InsertElementIntoHasseDiagram(new StringHasseNode("YB0", HasseNode.HasseNodeTypes.REAL, elements));
-               HDM.InsertElementIntoHasseDiagram(new StringHasseNode("YB1", HasseNode.HasseNodeTypes.REAL, elements));
+            HDM.InsertNodeIntoDiagram(new StringHasseNode("YA0", HasseNode.HasseNodeTypes.REAL, elements));
+              HDM.InsertNodeIntoDiagram(new StringHasseNode("YA1", HasseNode.HasseNodeTypes.REAL, elements));
+               HDM.InsertNodeIntoDiagram(new StringHasseNode("YB0", HasseNode.HasseNodeTypes.REAL, elements));
+               HDM.InsertNodeIntoDiagram(new StringHasseNode("YB1", HasseNode.HasseNodeTypes.REAL, elements));
                // HDM.DeleteNodesWithOneCover();
             DotFileWriter DW = new DotFileWriter(HDM.AllHasseNodes);
             DW.WriteDotFile();

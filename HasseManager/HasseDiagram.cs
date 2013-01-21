@@ -31,7 +31,8 @@ namespace HasseManager
         public HasseNode RootNode = null;
         public HasseNodeCollection AllHasseNodes = new HasseNodeCollection();
         HasseNodeCollection ElementaryHasseNodes = new HasseNodeCollection();
-        System.Collections.Queue ProcessingQueue = new System.Collections.Queue();
+ //       System.Collections.Queue ProcessingQueue = new System.Collections.Queue();
+        HasseFragmentInsertionList FragmentInsertionList = new HasseFragmentInsertionList();
         System.Diagnostics.Stopwatch sw = new System.Diagnostics.Stopwatch();
 
         int CountAdditions = 0;
@@ -66,9 +67,10 @@ namespace HasseManager
        public HasseDiagram(HasseNode Root)
        {
            RootNode = Root;
-           this.InsertElementIntoHasseDiagram(RootNode);
+           this.InsertNodeIntoDiagram(RootNode);
        }
 
+       
        public int DeleteNodesWithOneCover()
        {
            List<HasseNode> ToBeRemoved = new List<HasseNode>();
@@ -238,14 +240,23 @@ namespace HasseManager
         }
 
 
-        public void InsertElementIntoHasseDiagram(HasseNode newNode)
+        public void InsertNodeIntoDiagram(HasseNode newNode)
+        {
+            InsertNodeIntoDiagram (newNode,null,null);
+            foreach (FragmentToBeInserted F in FragmentInsertionList)
+            {
+                HasseNode Frag = new StringHasseNode(F.NewNodeContent, HasseNode.HasseNodeTypes.FRAGMENT, ElementaryHasseNodes);
+                InsertNodeIntoDiagram(Frag,null,null);
+            }
+        }
+
+        private void InsertNodeIntoDiagram(HasseNode newNode, HasseNode[] AboveTheseNodes,HasseNode[] BelowTheseNodes )
         {
             bool debug = Convert.ToBoolean(DEBUGLEVEL & LOG_INSERTIONS);
             bool dbgTimings = Convert.ToBoolean(DEBUGLEVEL & LOG_ALL_TIMINGS);
             sw.Reset();
             sw.Start();
-            //caution - make sure we avoid try to add identical objects
-
+            // do not add identical objects
             if (newNode.KeyString.Equals("~~~~"))
             {
                 System.Diagnostics.Debugger.Break();
@@ -261,8 +272,6 @@ namespace HasseManager
             if (DEBUGLEVEL > 0)
                 System.Diagnostics.Debug.WriteLine("Add Node " + newNode.KeyString + " " + CountAdditions.ToString());
 
-            
-            
                 foreach (HasseNode newObjectElement in newNode.getElementarySubobjects().Values)
                 {
                     if (ALWAYS_ADD_ELEMENTS_TO_DIAGRAM)
@@ -273,28 +282,11 @@ namespace HasseManager
 
                     if (!ElementaryHasseNodes.ContainsKey(newObjectElement.KeyString))
                         ElementaryHasseNodes.Add(newObjectElement.KeyString, newObjectElement);
-
                 }
-            
-            /*
-
-            // is this node an elementary node and also real or frag? 
-            if (ElementaryHasseNodes.ContainsKey(newNode.KeyString))
-            // perhaps just added
-            {
-                // get type of new node
-                HasseNode.HasseNodeTypes t = newNode.NodeType;
-                // from now on, refer to the existing node:
-                newNode = AllHasseNodes[newNode.KeyString];
-                // add type(s) for this node to, for example add  
-                newNode.AddNodeType(t);
-            }
-            */
 
             System.Diagnostics.Debug.WriteLineIf(dbgTimings, " ticks add 1 (init) " + sw.ElapsedTicks.ToString());
             sw.Reset();
             sw.Start();
-
 
             System.Diagnostics.Debug.WriteLineIf(debug, "=== Start LUB and GLB for " + newNode.KeyString + " ===");
 
@@ -310,7 +302,7 @@ namespace HasseManager
             sw.Start();
             System.Diagnostics.Debug.WriteLineIf(debug, "=== Done LUB and GLB =======");
 
-            InsertElementBetweenGlbAndLub(newNode, NodesInLeastUpperBound, NodesInGreatestLowerBound, ProcessingQueue, debug);
+            InsertElementBetweenGlbAndLub(newNode, NodesInLeastUpperBound, NodesInGreatestLowerBound,  debug);
             System.Diagnostics.Debug.WriteLineIf(dbgTimings, " ticks 3 (inserted new) " + sw.ElapsedTicks.ToString());
             sw.Reset();
             sw.Start();
@@ -319,39 +311,13 @@ namespace HasseManager
                 newNode.validate();
 
 
-            /*
             if (MAKE_MCS_AT_ONCE)
             {
-                if (newNode.NodesCovering().Count > 1)
-                {
-                    int i = 1;
-
-                    //For i As Integer = 1 To newNode.NodesCovering.Count
-                    foreach (HasseNode covering1 in newNode.NodesCovering().Values)
-                    {
-                        int j = 1;
-                        foreach (HasseNode covering2 in newNode.NodesCovering().Values)
-                        {
-                            if (j > i)
-                            {
-                                newNode.GetMaxCommonFragments(covering1, covering2, true, ref ProcessingQueue, AllHasseNodes);
-                            }
-                            j += 1;
-                        }
-                        i += 1;
-                    }
-                }
-            }
-            */
-
-
-            if (MAKE_MCS_AT_ONCE)
-            {
-                    int i = 1;
+                // can have several lowers, loop them
                     foreach (HasseEdge EdgeDownToParent in newNode.EdgesToCovered)
                     {
                         HasseNode Parent = EdgeDownToParent.LowerNode;
-                        int j = 1;
+                        // get sibling of new
                         foreach (HasseEdge EdgeUpToSibling in EdgeDownToParent.LowerNode.EdgesToCovering)
                         {
                             HasseNode Sibling = EdgeUpToSibling.UpperNode;
@@ -362,24 +328,20 @@ namespace HasseManager
                                     foreach (HasseNode Element in newNode.getElementarySubobjects().Values  )   {                                 
                                         // TODO better efficiency, use with least count elements
                                         // TODO make debug level for this
-                                        Element.GetMaxCommonFragments(newNode,Sibling , false, ref ProcessingQueue, ElementaryHasseNodes);
+                                        Element.GetMaxCommonFragments(newNode,Sibling , false, FragmentInsertionList, ElementaryHasseNodes);
                                     }
                                 }
                                 else
                                 {
-                                    Parent.GetMaxCommonFragments(newNode, Sibling , false, ref ProcessingQueue, ElementaryHasseNodes);
+                                    Parent.GetMaxCommonFragments(newNode, Sibling , false, FragmentInsertionList, ElementaryHasseNodes);
                                 }
                             }
-                            j += 1;
                         }
-                        i += 1;
                     }
             }
 
 
-
             System.Diagnostics.Debug.WriteLineIf(dbgTimings, " ticks 4 (made MCS)" + sw.ElapsedTicks.ToString());
-
             //start search upward from elementary subobjects of new object
             if (Convert.ToBoolean(CHECK_LEVEL & CHECK_ALL))
             {
@@ -388,22 +350,14 @@ namespace HasseManager
                     Node.validate();
                 }
             }
-
             // The node may be there already, just added, as element if it is both element and real
             if (!newNode.HasNodeType(HasseNode.HasseNodeTypes.ELEMENT))
                 AllHasseNodes.Add(newNode.KeyString, newNode);
-
-
-            while (ProcessingQueue.Count > 0)
-            {
-                HasseNode QueuedNode = (HasseNode)ProcessingQueue.Dequeue();
-                InsertElementIntoHasseDiagram(QueuedNode);
-            }
         }
 
 
 
-        private void InsertElementBetweenGlbAndLub(HasseNode newNode, HasseNodeCollection collectionLUB, HasseNodeCollection collectionGLB, System.Collections.Queue processingQueue, bool debug)
+        private void InsertElementBetweenGlbAndLub(HasseNode newNode, HasseNodeCollection collectionLUB, HasseNodeCollection collectionGLB,  bool debug)
         {
             bool dbg = Convert.ToBoolean(DEBUGLEVEL & LOG_INSERTIONS);
 

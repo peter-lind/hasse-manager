@@ -10,5 +10,6 @@ namespace HasseManager
     {
         public HasseNode UpperNode;
         public HasseNode LowerNode;
+        public HasseNode[] Label;
     }
 }

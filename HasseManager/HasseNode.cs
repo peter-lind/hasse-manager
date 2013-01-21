@@ -25,7 +25,7 @@ using System.Text;
 
 namespace HasseManager
 {
-    public abstract class HasseNode : IComparable 
+    public abstract class HasseNode : IComparable
     {
         public enum HasseNodeTypes
         {
@@ -37,7 +37,7 @@ namespace HasseManager
         }
 
 
-        public  List<HasseEdge> EdgesToCovering = new List<HasseEdge>();
+        public List<HasseEdge> EdgesToCovering = new List<HasseEdge>();
         public List<HasseEdge> EdgesToCovered = new List<HasseEdge>();
 
 
@@ -70,8 +70,8 @@ namespace HasseManager
         public bool HasNodeType(HasseNodeTypes NodeTypeToTestFor)
         {
             // use bitwise AND to see if bit of type in question is set
-            int tst= (int )(this.NodeType & NodeTypeToTestFor);
-            return (tst>0);
+            int tst = (int)(this.NodeType & NodeTypeToTestFor);
+            return (tst > 0);
         }
 
         public bool debug_CheckedIsLarger
@@ -88,26 +88,26 @@ namespace HasseManager
 
         public bool validate()
         {
-            foreach (HasseEdge cover in EdgesToCovering  )
+            foreach (HasseEdge cover in EdgesToCovering)
             {
-                foreach (HasseEdge _cover in EdgesToCovered )
+                foreach (HasseEdge _cover in EdgesToCovered)
                 {
-                    if ((!object.ReferenceEquals(cover.UpperNode , _cover.UpperNode )))
+                    if ((!object.ReferenceEquals(cover.UpperNode, _cover.UpperNode)))
                     {
-                        if (cover.UpperNode .IsLargerThan(_cover.UpperNode ))
+                        if (cover.UpperNode.IsLargerThan(_cover.UpperNode))
                         {
-                            throw new Exception(this.KeyString + " has two comparable covers : " + cover.UpperNode . KeyString + " and " + _cover.UpperNode .KeyString);
+                            throw new Exception(this.KeyString + " has two comparable covers : " + cover.UpperNode.KeyString + " and " + _cover.UpperNode.KeyString);
                         }
                     }
                 }
             }
-            foreach (HasseEdge covered in EdgesToCovered )
+            foreach (HasseEdge covered in EdgesToCovered)
             {
-                foreach (HasseEdge _covered in EdgesToCovered )
+                foreach (HasseEdge _covered in EdgesToCovered)
                 {
-                    if (covered.LowerNode  .IsLargerThan(_covered.LowerNode ))
+                    if (covered.LowerNode.IsLargerThan(_covered.LowerNode))
                     {
-                        throw new Exception(this.KeyString + " is covering two comparable objects: " + covered.LowerNode  .KeyString + " " + _covered.LowerNode  . KeyString);
+                        throw new Exception(this.KeyString + " is covering two comparable objects: " + covered.LowerNode.KeyString + " " + _covered.LowerNode.KeyString);
                     }
                 }
             }
@@ -149,7 +149,7 @@ namespace HasseManager
         }
         */
 
-        public abstract int elementCount { get; }
+        public abstract int elementCount();
         public abstract bool ContainsAllElementsIn(HasseNodeCollection col);
 
         //Public MustOverride Sub makeElementarySubobjects(ByVal existingelements As HasseVertexNodeCollection)
@@ -160,8 +160,8 @@ namespace HasseManager
         public abstract bool IsIdenticalTo(HasseNode elm);
         public abstract bool IsLargerThan(HasseNode smallobj);
         public abstract string KeyString { get; }
-        public abstract void GetDifferenceFragments(HasseNode Node2, ref System.Collections.Queue q, ref HasseNodeCollection existingNodes);
-        public abstract void GetMaxCommonFragments(HasseNode Node1, HasseNode Node2, bool dbg, ref System.Collections.Queue q, HasseNodeCollection GlobalHasseVertexNodeCollection);
+        //public abstract HasseNode[] GetDifferenceFragments(HasseNode SmallerNode, HasseNode LargerNode, ref HasseNodeCollection existingNodes);
+        public abstract void GetMaxCommonFragments(HasseNode Node1, HasseNode Node2, bool dbg, HasseFragmentInsertionList NewEdgeList, HasseNodeCollection GlobalElementCollection);
         protected abstract HasseNodeCollection makeElementarySubobjects(HasseNodeCollection GlobalHasseVertexObjectCollection);
 
         public HasseNodeCollection getElementarySubobjects()
@@ -177,16 +177,16 @@ namespace HasseManager
         int IComparable.CompareTo(object node)
         {
             HasseNode Node = (HasseNode)node;
-            return String.Compare(this.KeyString , Node.KeyString );
+            return String.Compare(this.KeyString, Node.KeyString);
 
         }
 
-        public HasseNode(HasseNodeTypes Type, HasseNodeCollection globalElementCollection)
+        public HasseNode(HasseNodeTypes Type, HasseNodeCollection Elements)
         {
             id += 1;
             MyId = id;
-            this.globalElementCollection = globalElementCollection;
             this.NodeType = Type;
+            this.globalElementCollection = Elements;
         }
     }
 

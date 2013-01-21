@@ -35,6 +35,8 @@ namespace HasseManager
 
         //***********************************
 
+        static StringMatcher Matcher = new StringMatcher(); 
+
         private string str = "";
         //private int m_elementcount;
         // private HasseVertexNodeCollection m_elementarysubobjects;
@@ -44,7 +46,7 @@ namespace HasseManager
 
 
         public StringHasseNode(string s, HasseNodeTypes ElementType, HasseNodeCollection globalElementCollection)
-            : base(ElementType, globalElementCollection)
+            : base(ElementType, globalElementCollection )
         {
 
 
@@ -67,130 +69,79 @@ namespace HasseManager
 
 
 
-        public override int elementCount
+        public override int elementCount()
         {
-            get { return getElementarySubobjects().Values.Count; }
+             return getElementarySubobjects().Values.Count; 
         }
 
 
-        public override void GetMaxCommonFragments(HasseNode Node1, HasseNode Node2, bool dbg, ref System.Collections.Queue q, HasseNodeCollection GlobalElementCollection)
+
+        private int GetNextMatch(int StartFrom,string SearchFor, string SearchIn)
         {
-            // this Node is known to be subNode on both Node1 and Node2
+           int HitPosition= SearchIn.IndexOf(SearchFor, StartFrom);
+           return HitPosition;
+        }
+
+        public override void GetMaxCommonFragments(HasseNode Node1, HasseNode Node2, bool dbg, HasseFragmentInsertionList NewFragmentList, HasseNodeCollection GlobalElementCollection)
+        {
+            // this Node is directly below both Node1 and Node2
             // it can match several places
 
-            int MinimumOverlap = 4;  
+             
             string strSeed = this.KeyString.Replace("*", "");
             string str1 = Node1.KeyString;
             string str2 = Node2.KeyString;
+            int MinimumOverlap = 4;
+            // Remember, we are only interested in matches strictly larger than seed
+            if (strSeed.Length + 1 > MinimumOverlap) { MinimumOverlap = strSeed.Length + 1; }
 
-
-            int pos1 = str1.IndexOf(strSeed);
-            while (pos1 > -1) //localise matches in Node1
-            {
-                int pos2 = str2.IndexOf(strSeed);
-
-                while (pos2 > -1)  //localise matches in Node2
-                {
-                    int leftoffs = 0;
-                    do
-                    { // perhaps there is match also to the left of where seed and str1/str2 match ?
-                        leftoffs += 1;
-                        if (pos1 - leftoffs < 0) //before start of string 1
-                            break;
-                        if (pos2 - leftoffs < 0) //before start of string 2
-                            break;
-                    } while (str1.Substring(pos1 - leftoffs, 1).Equals(str2.Substring(pos2 - leftoffs, 1)));
-                    leftoffs -= 1; //move back one step to where it last was ok
-
-                    int rightoffs = 0;
-                    do
-                    { // perhaps there is match also to the right of where seed and str1/str2 match ?
-                        rightoffs += 1;
-                        if (pos1 + rightoffs >= str1.Length) // after end of string 1
-                            break;
-                        if (pos2 + rightoffs >= str2.Length) // after end of string 2
-                            break;
-                    } while (str1.Substring(pos1 + rightoffs, 1).Equals(str2.Substring(pos2 + rightoffs, 1)));
-                    rightoffs -= 1; //move back one step to where it last was ok
-
-                    string s = str1.Substring(pos1 - leftoffs, 1 + leftoffs + rightoffs);
-
-
-                    if (s.Length >= MinimumOverlap ) 
-                    {
-                        // star to left? Both strings must then have one pos matching star
-                        if (pos1 - leftoffs > 0 && pos2 - leftoffs > 0) 
-                        { s = "*" + s; }
-                        // star to right? Both strings must then have one pos matching star
-                        if ((pos1 + rightoffs < str1.Length-1) && (pos2 + rightoffs < str2.Length-1)) s = s + "*";
-                        StringHasseNode newNode = new StringHasseNode(s, HasseNodeTypes.FRAGMENT, GlobalElementCollection);
-                        Debug.WriteLineIf(dbg, " created MCS of " + str1 + " and " + str2 + ": " + s);
-                        if (newNode.KeyString.Equals("*")) { System.Diagnostics.Debugger.Break(); }
-                        q.Enqueue(newNode);
-
-                        //+ strSeed.Length
-                        //pos1 left - do we have one or more chars to left? last is not star?
-                        if (pos1 - leftoffs    > 0 && (!str1.Substring(pos1 - leftoffs - 1, 1).Equals("*")))
-                        {
-                            string sl1 = str1.Substring(0, pos1) + "*";
-                            StringHasseNode newNodeL1 = new StringHasseNode(sl1, HasseNodeTypes.FRAGMENT, GlobalElementCollection);
-                            q.Enqueue(newNodeL1);
-                        }
-
-                        //pos2 left
-                        if (pos2 - leftoffs > 0 && (!str2.Substring(pos2 - leftoffs - 1, 1).Equals("*")))
-                        {
-                            string sl2 = str2.Substring(0, pos2) + "*";
-                            StringHasseNode newNodeL2 = new StringHasseNode(sl2, HasseNodeTypes.FRAGMENT, GlobalElementCollection);
-                            q.Enqueue(newNodeL2);
-                        }
-
-                        //pos1 right
-                        if (pos1 + rightoffs+1 < str1.Length && (!str1.Substring(pos1 + rightoffs+1,1).Equals ("*")))
-                        {
-                            string sr1 = "*" + str1.Substring(pos1 + rightoffs+1);
-                            StringHasseNode newNodeR1 = new StringHasseNode(sr1, HasseNodeTypes.FRAGMENT, GlobalElementCollection);
-                            q.Enqueue(newNodeR1);
-                        }
-                        //pos2 right
-                        if (pos2 + rightoffs+1 < str2.Length && (!str2.Substring(pos2 + rightoffs+1, 1).Equals("*")))
-                        {
-                            string sr2 = "*" + str2.Substring(pos2 + rightoffs+1);
-                            StringHasseNode newNodeR2 = new StringHasseNode(sr2, HasseNodeTypes.FRAGMENT, GlobalElementCollection);
-                            q.Enqueue(newNodeR2);
-                        }
-
-
-                    }
-                    pos2 = str2.IndexOf(strSeed, pos2 + 1);
+            int MatchPosA = GetNextMatch(0,strSeed,str1);
+            while(MatchPosA>-1){
+                int MatchPosB = GetNextMatch(0,strSeed,str2);
+                while(MatchPosB>-1){
+                    Match M = new Match( strSeed,MatchPosA, 0, str1, MatchPosB, 0, str2);
+                    M.ExpandMCSMatch();
+                    ProcessMatch(M, MinimumOverlap, NewFragmentList,  new HasseNode[2] { Node1,Node2 });
+                    MatchPosB = GetNextMatch(MatchPosB +1,strSeed,str2);
                 }
-                pos1 = str1.IndexOf(strSeed, pos1 + 1);
+                MatchPosA = GetNextMatch(MatchPosA +1,strSeed,str1);
             }
+
 
         }
 
+        private void ProcessMatch(Match M, int MinimumOverlap, HasseFragmentInsertionList NewFragmentList ,HasseNode [] PartlyMatchingNodes)
+            {
+            string StringMCS = M.GetMatchString();
+            if (StringMCS.Length >= MinimumOverlap)
+            {
+                // deal with the max common substructure:
+                // star to left? Both strings must then have one pos matching star
+                if (M.FirstPosInA  > 0 && M.FirstPosInB  > 0)
+                { StringMCS = "*" + StringMCS; }
+                // star to right? Both strings must then have one pos matching star
+                if ((M.LastPosInA < M.StrA.Length - 1) && (M.LastPosInB < M.StrB.Length - 1))
+                {
+                    StringMCS = StringMCS + "*";
+                }
+                NewFragmentList.Add(new HasseNode[1] { this }, PartlyMatchingNodes  , StringMCS, "MCS");
+            }
+        }
 
-
-
-        public override void GetDifferenceFragments(HasseNode Node2, ref System.Collections.Queue q, ref HasseNodeCollection existingNodes)
+        /*
+        public override HasseNode [] GetDifferenceFragments(HasseNode SmallerNode,HasseNode LargerNode,  ref HasseNodeCollection existingNodes)
         {
-            //the Node of the argument should be the larger object 
-            //can result in several objects, like both *A and A*
-
-            String ShorterString = this.str;        //for readability
-            StringHasseNode chrNode2 = (StringHasseNode)Node2;
-            string LongerString = chrNode2.str;     //for readability
+           
+            String ShorterString = SmallerNode.str;       
+            StringHasseNode chrNode2 = (StringHasseNode)LargerNode;
+            string LongerString = chrNode2.str; 
             String TrimmedShortString = ShorterString.Replace("*", "");
-
-
-            // if (ShorterString.Contains("*"))
-            //   System.Diagnostics.Debugger.Break();    
 
 
             //find position(s) of substring in string og larger Node
             int pos = LongerString.IndexOf(TrimmedShortString);
             //Dim arrlistLabelledObjects As ArrayList = New ArrayList
-            Debug.WriteLineIf(DEBUG_LABELLED_OBJECTS, "make labelled objects between " + this.KeyString + " and " + Node2.KeyString + " ...");
+            Debug.WriteLineIf(DEBUG_LABELLED_OBJECTS, "make labelled objects between " + SmallerNode.KeyString + " and " + LargerNode.KeyString + " ...");
 
             while (pos > -1)
             {
@@ -226,12 +177,12 @@ namespace HasseManager
                 if (pos > 0)
                 {
                     string leftStr = LongerString.Substring(0, pos);
-                    if ((leftStr.Length > 0) && (!leftStr.Equals("*"))) /*if not empty or a star only*/
+                    if ((leftStr.Length > 0) && (!leftStr.Equals("*"))) //if not empty or a star only
                     {
-                        // if (!leftStr.StartsWith ("*") )leftStr += "*"; /*then add a star if not already at start*/
-                        leftStr += "*"; /*then add a star if not already at start*/
+                        // if (!leftStr.StartsWith ("*") )leftStr += "*"; //then add a star if not already at start
+                        leftStr += "*"; //then add a star if not already at start
                         if (!existingNodes.ContainsKey(leftStr))
-                        {  /*create new node, put this in queue for insert into Hasse diagram*/
+                        {  //create new node, put this in queue for insert into Hasse diagram
                             StringHasseNode newNodeLeft = new StringHasseNode(leftStr, HasseNodeTypes.FRAGMENT, existingNodes);
                             Debug.WriteLineIf(DEBUG_LABELLED_OBJECTS, " created left labelled object: " + leftStr);
                             if (newNodeLeft.KeyString.Equals("*")) { System.Diagnostics.Debugger.Break(); }
@@ -244,10 +195,10 @@ namespace HasseManager
                 if (pos + ShorterString.Length <= (LongerString.Length - 1))  // there are one or more chars on right side
                 {
                     string rightStr = LongerString.Substring(pos + ShorterString.Length);
-                    if ((rightStr.Length > 0) && (!rightStr.Equals("*"))) /*if not empty or a star only*/
+                    if ((rightStr.Length > 0) && (!rightStr.Equals("*"))) //if not empty or a star only
                     {
-                        //if (!rightStr.EndsWith ("*") ) rightStr += "*"; /*then add a star if already in end*/
-                        rightStr = "*" + rightStr; /*then add a star if already in end*/
+                        //if (!rightStr.EndsWith ("*") ) rightStr += "*"; //then add a star if already in end
+                        rightStr = "*" + rightStr; //then add a star if already in end
                         if (!existingNodes.ContainsKey(rightStr))
                         {
                             //StringHasseNode newNodeRight = new StringHasseNode(rightStr, HasseNodeTypes.FRAGMENT, existingNodes);
@@ -259,8 +210,9 @@ namespace HasseManager
                 }
                 pos = LongerString.IndexOf(TrimmedShortString, pos + 1);
             }
-        }
 
+        }
+        */
 
 
         public override bool ContainsAllElementsIn(HasseNodeCollection col)
@@ -354,7 +306,7 @@ namespace HasseManager
             //also something must correspond to the stars
             //we test all matchings 
 
-            if (smallHasseElement.elementCount > this.elementCount)
+            if (smallHasseElement.elementCount() > this.elementCount())
             {
                 // must be smaller
                 Debug.WriteLineIf(DBG, this.KeyString + " is not larger than " + smallHasseElement.KeyString + " (0)");
@@ -465,9 +417,136 @@ namespace HasseManager
             get { return str; }
         }
 
-        public new string ID
+        public  string ID
         {
             get { return base.MyId.ToString(); }
+        }
+
+
+        public class StringMatcher
+        {
+            Match M;
+            public void Initialise(string SearchString,  string StringA, string StringB)
+            {
+                M = new Match(SearchString , 0 ,0,StringA ,0,0 ,StringB   );
+                M.LastPosInA = M.StrA.Length - 1; 
+            }
+
+            public Match CurrentMatch()
+            {
+                return M;
+            }
+            public bool  FindNextSubstringMatch()
+            {
+                M.FirstPosInB = M.StrB.IndexOf(M.StrA, M.FirstPosInB);
+                if (M.FirstPosInB > -1) { return true; };
+                return false;
+            }
+
+        }
+
+
+        public class Match {
+            public string SearchString;
+            public int FirstPosInA;
+            public int FirstPosInB;
+            public int LastPosInA;
+            public int LastPosInB;
+            public string StrA;
+            public string StrB;
+
+            public Match(string SearchString, int FirstPosInA, int LastPosInA, string StrA,  int FirstPosInB, int LastPosInB, string StrB)
+            {
+                
+                this.FirstPosInA = FirstPosInA;
+                this.FirstPosInB = FirstPosInB;
+                this.LastPosInA = LastPosInA;
+                this.LastPosInB = LastPosInB;
+                this.StrA =StrA ;
+                this.StrB = StrB;
+                this.SearchString = SearchString;
+        }
+           
+
+
+            public void ExpandMCSMatch()
+            {
+                // we already know this describes a match, but we started with a seed possibly
+                // smaller than full matching region, try to expand to left and right...
+                int leftoffs = 0;
+                do
+                { // perhaps there is match also to the left of where seed and str1/str2 match ?
+                    leftoffs += 1;
+                    if (FirstPosInA - leftoffs < 0) //before start of string 1
+                        break;
+                    if (FirstPosInB - leftoffs < 0) //before start of string 2
+                        break;
+                } while (StrA.Substring(FirstPosInA - leftoffs, 1).Equals(StrB.Substring(FirstPosInB - leftoffs, 1)));
+                leftoffs -= 1; //move back one step to where it last was ok
+
+
+                
+                int rightoffs = 0;
+                do
+                { // perhaps there is match also to the right of where seed and str1/str2 match ?
+                    rightoffs += 1;
+                    if (FirstPosInA + rightoffs >= StrA.Length) // after end of string 1
+                        break;
+                    if (FirstPosInB + rightoffs >= StrB.Length) // after end of string 2
+                        break;
+                } while (StrA.Substring(FirstPosInA + rightoffs, 1).Equals(StrB.Substring(FirstPosInB + rightoffs, 1)));
+                rightoffs -= 1; //move back one step to where it last was ok
+
+                // adjust match object
+                FirstPosInA -= leftoffs;
+                FirstPosInB -= leftoffs;
+                LastPosInA = FirstPosInA + rightoffs;
+                LastPosInB = FirstPosInB + rightoffs;
+            }
+
+            public string GetMatchString()
+            {
+                return StrA.Substring(FirstPosInA, MatchStringLength());
+            }
+         
+            public int MatchStringLength()
+            {
+                return LastPosInA - FirstPosInA + 1; 
+            }
+
+            public List<string> DifferenceStrings()
+            {
+                List<string> DiffStringList = new List<string >();
+                //+ strSeed.Length
+                //A to left - do we have one or more chars to left? last is not star?
+                if (FirstPosInA >0  && (! StrA.Substring(FirstPosInA  - 1, 1).Equals("*")))
+                {
+                    string sl1 = StrA.Substring(0, FirstPosInA ) + "*";
+                    DiffStringList.Add(sl1);
+                }
+
+                // B to left
+                if (FirstPosInB > 0 && (!StrB.Substring(FirstPosInB - 1, 1).Equals("*")))
+                {
+                    string sl2 = StrB.Substring(0, FirstPosInB) + "*";
+                    DiffStringList.Add(sl2);
+                }
+
+                //pos1 right
+                if (LastPosInA +1 < StrA.Length && (!StrA.Substring(LastPosInA+1,1  ).Equals ("*")    ))
+                {
+                    string sr1 = "*" + StrA.Substring(LastPosInA + 1);
+                    DiffStringList.Add(sr1);
+                }
+                //pos2 right
+                if (LastPosInB +1 < StrB.Length && (!StrB.Substring(LastPosInB+1,1  ).Equals ("*")    ) )
+                {
+                    string sr2 = "*" + StrB.Substring(LastPosInB + 1);
+                    DiffStringList.Add(sr2);
+                }
+
+                return DiffStringList; 
+            }
         }
 
     }

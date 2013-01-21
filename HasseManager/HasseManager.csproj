@@ -58,7 +58,7 @@
     <Compile Include="HasseDiagram.cs" />
     <Compile Include="HasseDiagramStats.cs" />
     <Compile Include="HasseEdge.cs" />
-    <Compile Include="HasseEdgeList.cs" />
+    <Compile Include="HasseFragmentInsertionList.cs" />
     <Compile Include="HasseNode.cs" />
     <Compile Include="HasseValidation.cs" />
     <Compile Include="HasseNodeCollection.cs" />
