@@ -38,22 +38,15 @@ namespace HasseManager
         static StringMatcher Matcher = new StringMatcher(); 
 
         private string str = "";
-        //private int m_elementcount;
-        // private HasseVertexNodeCollection m_elementarysubobjects;
         const bool DEBUG_LABELLED_OBJECTS = false;
         const bool DEBUG_NEW = false;
-
-
 
         public StringHasseNode(string s, HasseNodeTypes ElementType, HasseNodeCollection globalElementCollection)
             : base(ElementType, globalElementCollection )
         {
 
-
-
             // TODO remove this check
             if (s.Contains("**")) { throw new Exception("double stars"); }
-
             if (s.Equals ("~~~~~~"))
             {
                 System.Diagnostics.Debugger.Break();
@@ -67,14 +60,10 @@ namespace HasseManager
             str = s;
         }
 
-
-
         public override int elementCount()
         {
              return getElementarySubobjects().Values.Count; 
         }
-
-
 
         private int GetNextMatch(int StartFrom,string SearchFor, string SearchIn)
         {
@@ -82,17 +71,16 @@ namespace HasseManager
            return HitPosition;
         }
 
-        public override void GetMaxCommonFragments(HasseNode Node1, HasseNode Node2, bool dbg, HasseFragmentInsertionList NewFragmentList, HasseNodeCollection GlobalElementCollection)
+        public override void GetMaxCommonFragments(HasseNode Node1, HasseNode Node2, bool dbg, HasseFragmentInsertionList NewFragmentList, HasseNodeCollection GlobalElementCollection,int MinimumOverlap)
         {
             // this Node is directly below both Node1 and Node2
             // it can match several places
-
              
             string strSeed = this.KeyString.Replace("*", "");
             string str1 = Node1.KeyString;
             string str2 = Node2.KeyString;
-            int MinimumOverlap = 4;
-            // Remember, we are only interested in matches strictly larger than seed
+            
+            // we are only interested in matches strictly larger than seed
             if (strSeed.Length + 1 > MinimumOverlap) { MinimumOverlap = strSeed.Length + 1; }
 
             int MatchPosA = GetNextMatch(0,strSeed,str1);
@@ -106,8 +94,6 @@ namespace HasseManager
                 }
                 MatchPosA = GetNextMatch(MatchPosA +1,strSeed,str1);
             }
-
-
         }
 
         private void ProcessMatch(Match M, int MinimumOverlap, HasseFragmentInsertionList NewFragmentList ,HasseNode [] PartlyMatchingNodes)
@@ -150,9 +136,6 @@ namespace HasseManager
                             string strR = LargerNode.KeyString.Substring(MatchPosFirst + SmallString.Length);
                             if (strR.Length > 0 && (!strR.Equals("*")))
                             {
-                                // XYZ
-                                // --X
-                                // first char in sma
                                 if (MatchPosFirst  > 0 && (!LargerNode.KeyString.Substring (MatchPosFirst-1 ,1).Equals ("*")   ))
                                     strR = "*" + strR;
                                 DiffList.Add(strR);
@@ -163,92 +146,6 @@ namespace HasseManager
         }
 
 
-        /*
-        public override HasseNode [] GetDifferenceFragments(HasseNode SmallerNode,HasseNode LargerNode,  ref HasseNodeCollection existingNodes)
-        
-         {
-           
-            String ShorterString = SmallerNode.str;       
-            StringHasseNode chrNode2 = (StringHasseNode)LargerNode;
-            string LongerString = chrNode2.str; 
-            String TrimmedShortString = ShorterString.Replace("*", "");
-
-
-            //find position(s) of substring in string og larger Node
-            int pos = LongerString.IndexOf(TrimmedShortString);
-            //Dim arrlistLabelledObjects As ArrayList = New ArrayList
-            Debug.WriteLineIf(DEBUG_LABELLED_OBJECTS, "make labelled objects between " + SmallerNode.KeyString + " and " + LargerNode.KeyString + " ...");
-
-            while (pos > -1)
-            {
-                Debug.WriteLineIf(DEBUG_LABELLED_OBJECTS, " pos: " + pos.ToString());
-
-                //str:        X
-                //largestr:  AXB
-                //pos:       012
-
-                //substring based on ShorterString - add stars as appropriate
-                string newstring = TrimmedShortString;
-
-                if (pos > 0)  // star to left?
-                    newstring = "*" + newstring;
-
-                if (TrimmedShortString.Length + pos < LongerString.Length) // star to right?
-                    newstring = newstring + "*";
-
-
-                if (!newstring.Equals(ShorterString))  // is it not what we started with?
-                {
-                    if (!existingNodes.ContainsKey(newstring))
-                    {
-                        StringHasseNode newNode = new StringHasseNode(newstring, HasseNodeTypes.FRAGMENT, existingNodes);
-                        Debug.WriteLineIf(DEBUG_LABELLED_OBJECTS, " created labelled object: " + newstring);
-                        if (newNode.KeyString.Equals("*")) { System.Diagnostics.Debugger.Break(); }
-                        q.Enqueue(newNode);
-                    }
-                }
-
-                // something on left side?
-                //substring based on larger string minus smaller - left side
-                if (pos > 0)
-                {
-                    string leftStr = LongerString.Substring(0, pos);
-                    if ((leftStr.Length > 0) && (!leftStr.Equals("*"))) //if not empty or a star only
-                    {
-                        // if (!leftStr.StartsWith ("*") )leftStr += "*"; //then add a star if not already at start
-                        leftStr += "*"; //then add a star if not already at start
-                        if (!existingNodes.ContainsKey(leftStr))
-                        {  //create new node, put this in queue for insert into Hasse diagram
-                            StringHasseNode newNodeLeft = new StringHasseNode(leftStr, HasseNodeTypes.FRAGMENT, existingNodes);
-                            Debug.WriteLineIf(DEBUG_LABELLED_OBJECTS, " created left labelled object: " + leftStr);
-                            if (newNodeLeft.KeyString.Equals("*")) { System.Diagnostics.Debugger.Break(); }
-                            q.Enqueue(newNodeLeft);
-                        }
-                    }
-                }
-
-
-                if (pos + ShorterString.Length <= (LongerString.Length - 1))  // there are one or more chars on right side
-                {
-                    string rightStr = LongerString.Substring(pos + ShorterString.Length);
-                    if ((rightStr.Length > 0) && (!rightStr.Equals("*"))) //if not empty or a star only
-                    {
-                        //if (!rightStr.EndsWith ("*") ) rightStr += "*"; //then add a star if already in end
-                        rightStr = "*" + rightStr; //then add a star if already in end
-                        if (!existingNodes.ContainsKey(rightStr))
-                        {
-                            //StringHasseNode newNodeRight = new StringHasseNode(rightStr, HasseNodeTypes.FRAGMENT, existingNodes);
-                            //Debug.WriteLineIf(DEBUG_LABELLED_OBJECTS, " created right labelled object: " + rightStr);
-                            //if (newNodeRight.UniqueString.Equals("*")) { System.Diagnostics.Debugger.Break(); }
-                            //q.Enqueue(newNodeRight);
-                        }
-                    }
-                }
-                pos = LongerString.IndexOf(TrimmedShortString, pos + 1);
-            }
-
-        }
-        */
 
 
         public override bool ContainsAllElementsIn(HasseNodeCollection col)

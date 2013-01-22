@@ -151,17 +151,10 @@ namespace HasseManager
 
         public abstract int elementCount();
         public abstract bool ContainsAllElementsIn(HasseNodeCollection col);
-
-        //Public MustOverride Sub makeElementarySubobjects(ByVal existingelements As HasseVertexNodeCollection)
-
-        // distinct objects, no duplicates 
-        //cannot rely absolutely on keys for chemistry using accord
-
         public abstract bool IsIdenticalTo(HasseNode elm);
         public abstract bool IsLargerThan(HasseNode smallobj);
         public abstract string KeyString { get; }
-        //public abstract HasseNode[] GetDifferenceFragments(HasseNode SmallerNode, HasseNode LargerNode, ref HasseNodeCollection existingNodes);
-        public abstract void GetMaxCommonFragments(HasseNode Node1, HasseNode Node2, bool dbg, HasseFragmentInsertionList NewEdgeList, HasseNodeCollection GlobalElementCollection);
+        public abstract void GetMaxCommonFragments(HasseNode Node1, HasseNode Node2, bool dbg, HasseFragmentInsertionList NewEdgeList, HasseNodeCollection GlobalElementCollection, int MinimumOverlap);
         public abstract string[] GetDifferenceString(HasseNode LargerNode);
         protected abstract HasseNodeCollection makeElementarySubobjects(HasseNodeCollection GlobalHasseVertexObjectCollection);
 

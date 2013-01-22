@@ -34,12 +34,6 @@ namespace HasseManager
             
         }
 
-        /*
-        protected override string GetKeyForItem(HasseElement item)
-        {
-            return item.UniqueString ;
-        }
-        */
 
         public void Sort()
         {
@@ -113,8 +107,6 @@ namespace HasseManager
             }
             return null;
         }
-
-
 
     }
 
