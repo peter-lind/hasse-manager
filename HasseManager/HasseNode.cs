@@ -162,6 +162,7 @@ namespace HasseManager
         public abstract string KeyString { get; }
         //public abstract HasseNode[] GetDifferenceFragments(HasseNode SmallerNode, HasseNode LargerNode, ref HasseNodeCollection existingNodes);
         public abstract void GetMaxCommonFragments(HasseNode Node1, HasseNode Node2, bool dbg, HasseFragmentInsertionList NewEdgeList, HasseNodeCollection GlobalElementCollection);
+        public abstract string[] GetDifferenceString(HasseNode LargerNode);
         protected abstract HasseNodeCollection makeElementarySubobjects(HasseNodeCollection GlobalHasseVertexObjectCollection);
 
         public HasseNodeCollection getElementarySubobjects()

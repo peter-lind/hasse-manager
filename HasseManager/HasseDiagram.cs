@@ -243,11 +243,13 @@ namespace HasseManager
         public void InsertNodeIntoDiagram(HasseNode newNode)
         {
             InsertNodeIntoDiagram (newNode,null,null);
-            foreach (FragmentToBeInserted F in FragmentInsertionList)
+            while (FragmentInsertionList.Count > 0  )
             {
+                FragmentToBeInserted F = FragmentInsertionList.Dequeue ();
                 HasseNode Frag = new StringHasseNode(F.NewNodeContent, HasseNode.HasseNodeTypes.FRAGMENT, ElementaryHasseNodes);
                 InsertNodeIntoDiagram(Frag,null,null);
             }
+   
         }
 
         private void InsertNodeIntoDiagram(HasseNode newNode, HasseNode[] AboveTheseNodes,HasseNode[] BelowTheseNodes )
@@ -395,7 +397,7 @@ namespace HasseManager
             foreach (HasseNode v_high in collectionLUB.Values)
             {
                 System.Diagnostics.Debug.WriteLineIf(dbg, "cover (II) " + newNode.KeyString + " with " + v_high.KeyString);
-                MakeEdge(newNode, v_high);
+                MakeEdge(newNode, v_high); 
               /*
                 if (MAKE_LABELLED_NODES == true)
                 {
@@ -460,7 +462,13 @@ namespace HasseManager
             E.LowerNode =N1;
             E.UpperNode =N2;
             N1.EdgesToCovering.Add (E);
-            N2.EdgesToCovered.Add (E); 
+            N2.EdgesToCovered.Add (E);
+            string[] EdgeLabels = N1.GetDifferenceString(N2);
+            E.LabelText =  String.Join(", ",EdgeLabels);
+            
+            foreach(string s in EdgeLabels ){
+            FragmentInsertionList.Add(null,null,s,"Make Edge");
+            }
         }
 
         private void MakeEdgeIfNotExists(HasseNode N1, HasseNode N2)

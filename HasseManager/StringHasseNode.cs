@@ -128,9 +128,45 @@ namespace HasseManager
             }
         }
 
+
+        public override string[] GetDifferenceString(HasseNode LargerNode){
+            List<string> DiffList = new List<string>() ;
+            string SmallString = this.KeyString.Replace("*", "");
+            int MatchPosFirst = GetNextMatch(0, SmallString, LargerNode.KeyString);
+            int MatchposLast = MatchPosFirst + SmallString.Length-1; 
+                        while (MatchPosFirst > -1)
+                        {
+                            string strL = LargerNode.KeyString.Substring(0, MatchPosFirst );
+                            if (strL.Length > 0 && (!strL.Equals("*")))
+                            {
+                                if (strL.StartsWith("ger") && LargerNode.KeyString.StartsWith("german"))
+                                    System.Diagnostics.Debugger.Break();
+  
+                                // last char in small string matches (non-star) character ?
+                                if (LargerNode.KeyString.Length > strL.Length && (!LargerNode.KeyString.Substring(strL.Length, 1).Equals("*")))
+                                    strL = strL + "*" ;
+                                    DiffList.Add(strL);
+                            }
+                            string strR = LargerNode.KeyString.Substring(MatchPosFirst + SmallString.Length);
+                            if (strR.Length > 0 && (!strR.Equals("*")))
+                            {
+                                // XYZ
+                                // --X
+                                // first char in sma
+                                if (MatchPosFirst  > 0 && (!LargerNode.KeyString.Substring (MatchPosFirst-1 ,1).Equals ("*")   ))
+                                    strR = "*" + strR;
+                                DiffList.Add(strR);
+                            }
+                            MatchPosFirst = GetNextMatch(MatchPosFirst + 1, SmallString, LargerNode.KeyString);
+                        }
+                        return DiffList.ToArray(); 
+        }
+
+
         /*
         public override HasseNode [] GetDifferenceFragments(HasseNode SmallerNode,HasseNode LargerNode,  ref HasseNodeCollection existingNodes)
-        {
+        
+         {
            
             String ShorterString = SmallerNode.str;       
             StringHasseNode chrNode2 = (StringHasseNode)LargerNode;
@@ -496,12 +532,15 @@ namespace HasseManager
                         break;
                 } while (StrA.Substring(FirstPosInA + rightoffs, 1).Equals(StrB.Substring(FirstPosInB + rightoffs, 1)));
                 rightoffs -= 1; //move back one step to where it last was ok
+           //     if (StrA.StartsWith("beg") && StrB.StartsWith("beg"))
+             //       System.Diagnostics.Debugger.Break();   
 
                 // adjust match object
-                FirstPosInA -= leftoffs;
-                FirstPosInB -= leftoffs;
                 LastPosInA = FirstPosInA + rightoffs;
                 LastPosInB = FirstPosInB + rightoffs;
+
+                FirstPosInA -= leftoffs;
+                FirstPosInB -= leftoffs;
             }
 
             public string GetMatchString()

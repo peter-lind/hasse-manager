@@ -45,7 +45,7 @@ namespace HasseManager
             
             
             DotFile.Write("[label=\"");
-            DotFile.Write("X");
+            DotFile.Write(E.LabelText  );
             DotFile.Write ("\"]");
             
             DotFile.WriteLine(";");

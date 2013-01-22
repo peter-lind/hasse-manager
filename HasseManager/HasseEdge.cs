@@ -11,5 +11,11 @@ namespace HasseManager
         public HasseNode UpperNode;
         public HasseNode LowerNode;
         public HasseNode[] Label;
+        public string LabelText;
+        public HasseEdge()
+        {
+            //System.Diagnostics.Debugger.Break();   
+        }
     }
+    
 }
