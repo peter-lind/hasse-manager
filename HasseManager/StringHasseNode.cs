@@ -23,9 +23,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Diagnostics;
+using System.Security.Cryptography;
 
 namespace HasseManager
 {
+
     public class StringHasseNode : HasseNode
     {
 
@@ -40,6 +42,41 @@ namespace HasseManager
         private string str = "";
         const bool DEBUG_LABELLED_OBJECTS = false;
         const bool DEBUG_NEW = false;
+
+
+
+        public override Int64 HashInt64()
+        {
+            if (_hash!=0) return _hash;
+
+            int CountNodesAbove = this.EdgesToCovering.Count();
+            //int CountAllBits = 0;
+            //byte[][] BytesFromAll = new byte[CountNodesAbove+1][];
+            //int i = 0;
+            Int64 sum = 0;
+            if (CountNodesAbove > 0)
+            {
+                foreach (HasseEdge E in this.EdgesToCovering)
+                {
+                    Int64 b = E.UpperNode.HashInt64();
+                    sum += (b / 10000);
+                }
+
+                // important - now shuffle bits in sum
+                // otherwise hash from top nodes will eventually be divided away
+                byte[] SumBytes = BitConverter.GetBytes(sum);
+                byte[] SumHash = new MD5CryptoServiceProvider().ComputeHash(SumBytes);
+                sum = BitConverter.ToInt64(SumHash, 1);
+            }
+
+            byte[] KeyBytes = System.Text.ASCIIEncoding.ASCII.GetBytes(this.KeyString);
+            byte[] KeyHash =new MD5CryptoServiceProvider().ComputeHash(KeyBytes );
+            Int64 thisInt64 = BitConverter.ToInt64(KeyHash,1);
+            //System.Console.WriteLine(thisInt64.ToString() + " " + this.KeyString );
+            sum += (thisInt64 / 10000);
+            _hash = sum; // cache this and do not reevaluate
+            return sum;
+        }
 
         public StringHasseNode(string s, HasseNodeTypes ElementType, HasseNodeCollection globalElementCollection)
             : base(ElementType, globalElementCollection )
@@ -125,9 +162,6 @@ namespace HasseManager
                             string strL = LargerNode.KeyString.Substring(0, MatchPosFirst );
                             if (strL.Length > 0 && (!strL.Equals("*")))
                             {
-                                if (strL.StartsWith("ger") && LargerNode.KeyString.StartsWith("german"))
-                                    System.Diagnostics.Debugger.Break();
-  
                                 // last char in small string matches (non-star) character ?
                                 if (LargerNode.KeyString.Length > strL.Length && (!LargerNode.KeyString.Substring(strL.Length, 1).Equals("*")))
                                     strL = strL + "*" ;
@@ -212,9 +246,9 @@ namespace HasseManager
             if (smallHasseElement.NodeType == HasseNodeTypes.ROOT) return true;
  
 #if DEBUG
-            if (this.KeyString.Equals("DB") && smallHasseElement.KeyString.Equals("D"))
+            if (this.KeyString.Equals("*en*") && smallHasseElement.KeyString.Contains("en"))
             {
-                //System.Diagnostics.Debugger.Break();
+              //  System.Diagnostics.Debugger.Break();
             }
 #endif
 

@@ -40,12 +40,6 @@ namespace HasseManager
         public List<HasseEdge> EdgesToCovering = new List<HasseEdge>();
         public List<HasseEdge> EdgesToCovered = new List<HasseEdge>();
 
-
-        //private HasseNodeCollection m_NodesCovering = new HasseNodeCollection();
-        //private HasseNodeCollection m_NodesCovered = new HasseNodeCollection();
-        //private HasseNodeCollection m_incomingNodesFrom = new HasseNodeCollection();
-        //private HasseNodeCollection m_outgoingNodesTo = new HasseNodeCollection();
-
         // elementary objects to be instantiated lazily when needed
         private HasseNodeCollection m_elementarysubobjects;
 
@@ -58,7 +52,8 @@ namespace HasseManager
         static internal int CountComparisons = 0;
         static internal int WasLargerThan = 0;
         static internal int id = 0;
-        internal int MyId;
+        protected int MyId;
+        protected Int64  _hash;
 
         internal HasseNodeTypes NodeType;
 
@@ -115,45 +110,12 @@ namespace HasseManager
             return true;
         }
 
-        /*
-        public List<HasseEdge> EdgesUp()
-        {
-            return _EdgesToCovering;
-        }
-
-        public List<HasseEdge> EdgesDown()
-        {
-            return _EdgesToCovered;
-        }
-        *)
-        /*
-        public HasseNodeCollection NodesCovering()
-        {
-            return (m_NodesCovering);
-        }
-
-        public HasseNodeCollection NodesCovered()
-        {
-            return (m_NodesCovered);
-        }
-        */
-        /*
-        public HasseNodeCollection IncomingNodesFrom()
-        {
-            return (m_incomingNodesFrom);
-        }
-
-        public HasseNodeCollection OutgoingNodesTo()
-        {
-            return (m_outgoingNodesTo);
-        }
-        */
-
         public abstract int elementCount();
         public abstract bool ContainsAllElementsIn(HasseNodeCollection col);
         public abstract bool IsIdenticalTo(HasseNode elm);
         public abstract bool IsLargerThan(HasseNode smallobj);
         public abstract string KeyString { get; }
+        public abstract Int64  HashInt64();
         public abstract void GetMaxCommonFragments(HasseNode Node1, HasseNode Node2, bool dbg, HasseFragmentInsertionList NewEdgeList, HasseNodeCollection GlobalElementCollection, int MinimumOverlap);
         public abstract string[] GetDifferenceString(HasseNode LargerNode);
         protected abstract HasseNodeCollection makeElementarySubobjects(HasseNodeCollection GlobalHasseVertexObjectCollection);
@@ -181,6 +143,14 @@ namespace HasseManager
             MyId = id;
             this.NodeType = Type;
             this.globalElementCollection = Elements;
+        }
+
+        public string HashString()
+        {
+            //System.Text.Encoding enc = System.Text.Encoding.UTF8 ;
+            //string myString = enc.GetString(this.Hash());
+            //return myString;
+            return HashInt64().ToString();
         }
     }
 

@@ -250,7 +250,9 @@ namespace HasseManager
             }
             CountAdditions += 1;
             if (DEBUGLEVEL > 0)
-                System.Diagnostics.Debug.WriteLine("Add Node " + newNode.KeyString + " " + CountAdditions.ToString());
+            {
+                System.Diagnostics.Debug.WriteLine("Add Node " + newNode.KeyString + " " + CountAdditions.ToString()); 
+            }
 
                 foreach (HasseNode newObjectElement in newNode.getElementarySubobjects().Values)
                 {
@@ -366,16 +368,14 @@ namespace HasseManager
             {
                 System.Diagnostics.Debug.WriteLineIf(dbg, "cover (I)  " + v_low.KeyString + " with " + newNode.KeyString);
                 MakeEdge(v_low, newNode);
-
-
-                //make relations between new and LUBs
-                foreach (HasseNode v_high in collectionLUB.Values)
-                {
-                    System.Diagnostics.Debug.WriteLineIf(dbg, "cover (II) " + newNode.KeyString + " with " + v_high.KeyString);
-                    MakeEdge(newNode, v_high);
-                }
-
             }
+            //make relations between new and LUBs
+            foreach (HasseNode v_high in collectionLUB.Values)
+            {
+                System.Diagnostics.Debug.WriteLineIf(dbg, "cover (II) " + newNode.KeyString + " with " + v_high.KeyString);
+                MakeEdge(newNode, v_high);
+            }
+
         }
 
         private void RemoveEdge(HasseEdge E)
@@ -389,6 +389,7 @@ namespace HasseManager
         }
         private void MakeEdge(HasseNode N1, HasseNode N2)
         {
+            if (ExistsEdge(N1,N2)) return;
             HasseEdge E = new HasseEdge(); 
             E.LowerNode =N1;
             E.UpperNode =N2;
@@ -400,6 +401,16 @@ namespace HasseManager
             foreach(string s in EdgeLabels ){
             FragmentInsertionList.Add(null,null,s,"Make Edge");
             }
+        }
+
+        private bool ExistsEdge(HasseNode N1, HasseNode N2)
+        {
+            foreach (HasseEdge E in N1.EdgesToCovering){
+                if (E.UpperNode == N2) {
+                    return true; 
+                }
+            }
+                return false;
         }
 
         private void MakeEdgeIfNotExists(HasseNode N1, HasseNode N2)

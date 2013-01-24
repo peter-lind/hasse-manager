@@ -144,7 +144,7 @@ namespace HasseManager
                     break; 
             } while (true);
 
-           // Words.Sort();
+            Words.Sort();
 
             foreach(string Word in Words){
                  HDM.InsertNodeIntoDiagram(new StringHasseNode(Word, HasseNode.HasseNodeTypes.REAL, elements));
@@ -152,6 +152,7 @@ namespace HasseManager
 
             fs.Close();
             sw.Stop();
+             
             System.Diagnostics.Debug.WriteLine("Total time: " + (sw.ElapsedMilliseconds / 1000).ToString() + " seconds");
             //HDM.ContractChains2();
  
@@ -165,13 +166,13 @@ namespace HasseManager
             } while (true);
 
             HDM.AllHasseNodes.Sort();
-            foreach (string s in HDM.AllHasseNodes.Keys)
+            foreach (HasseNode n in HDM.AllHasseNodes.Values )
             {
-                System.Diagnostics.Debug.WriteLine(s);   
+                System.Diagnostics.Debug.WriteLine( n.KeyString   );   
             }
             DotFileWriter DW = new DotFileWriter(HDM.AllHasseNodes);
             DW.WriteDotFile();
-
+            System.Console.WriteLine(HDM.RootNode.HashString ());
             System.Diagnostics.Debug.WriteLine(HDM.AllHasseNodes.Count.ToString() + " objects");
  
 
