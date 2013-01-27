@@ -33,10 +33,12 @@ namespace HasseManager
             ROOT = 0,
             ELEMENT = 1,
             FRAGMENT = 2,
-            REAL = 4
+            MAX_COMMON_FRAGMENT =4,
+            DIFFERENCE_FRAGMENT = 8,
+            REAL = 16
         }
 
-
+        public List<HasseEdge> linkedEdges = new List<HasseEdge>();
         public List<HasseEdge> EdgesToCovering = new List<HasseEdge>();
         public List<HasseEdge> EdgesToCovered = new List<HasseEdge>();
 
@@ -57,6 +59,11 @@ namespace HasseManager
 
         internal HasseNodeTypes NodeType;
 
+        public void AddLinkToEdge(HasseEdge E)
+        {
+            linkedEdges.Add(E); // to this node, add ref to edge
+            E.LinkedNodes.Add (this); // to the edge, add ref to this node
+        }
         public void AddNodeType(HasseNodeTypes NewNodeType)
         { /*set the bit corresponding to NewNodeType */
             this.NodeType = this.NodeType | NewNodeType;
@@ -116,7 +123,7 @@ namespace HasseManager
         public abstract bool IsLargerThan(HasseNode smallobj);
         public abstract string KeyString { get; }
         public abstract Int64  HashInt64();
-        public abstract void GetMaxCommonFragments(HasseNode Node1, HasseNode Node2, bool dbg, HasseFragmentInsertionList NewEdgeList, HasseNodeCollection GlobalElementCollection, int MinimumOverlap);
+        public abstract void GetMaxCommonFragments(HasseNode Node1, HasseNode Node2, bool dbg, HasseFragmentInsertionQueue NewEdgeList, HasseNodeCollection GlobalElementCollection, int MinimumOverlap);
         public abstract string[] GetDifferenceString(HasseNode LargerNode);
         protected abstract HasseNodeCollection makeElementarySubobjects(HasseNodeCollection GlobalHasseVertexObjectCollection);
 

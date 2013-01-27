@@ -24,16 +24,28 @@ using System.Text;
 using System.Collections;
 namespace HasseManager
 {
-    public class HasseFragmentInsertionList: Queue <FragmentToBeInserted > 
+    public class HasseFragmentInsertionQueue: Queue <FragmentToBeInserted > 
     {
        // private Queue<FragmentToBeInserted> FragmentList = new Queue<FragmentToBeInserted>();
-        public void Add( HasseNode[] LowerNodes,HasseNode[] HigherNodes, string NewNodeContent,string Origin)
+        public void Add(HasseNode[] LowerNodes, HasseNode[] HigherNodes, string NewNodeContent,
+            string Origin, HasseNode.HasseNodeTypes NodeType, HasseEdge EdgeToLink)
         {
+            if (EdgeToLink != null)
+            {
+                if (EdgeToLink.LowerNode == null || EdgeToLink.UpperNode == null)
+                {
+                    System.Diagnostics.Debugger.Break();
+                }
+            }
+
+
             FragmentToBeInserted F = new FragmentToBeInserted();
             F.LowerNodes = LowerNodes;
             F.HigherNodes = HigherNodes;
             F.NewNodeContent = NewNodeContent;
             F.Origin = Origin;
+            F.NodeType = NodeType;
+            F.LinkToEdge = EdgeToLink;
             this.Enqueue (F);
         }
     }
@@ -43,6 +55,8 @@ namespace HasseManager
         public String NewNodeContent;
         public HasseNode[] HigherNodes;
         public string Origin;
+        public HasseNode.HasseNodeTypes NodeType;
+        public HasseEdge LinkToEdge;
     }
 
 }

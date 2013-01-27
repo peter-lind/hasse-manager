@@ -8,6 +8,8 @@ The mathematical definition is about binary relations and partially ordered sets
 
 The software here is on-line in the sense that data items are added one at a time, with the data structure is updated for every new data addition. It consists of classes for HasseDiagram, elements in the diagram, solvers etc. There is also a Windows form which is a testbench for the classes.
 
-It will be possible to output files in DOT format, which is used to create drawings with Graphviz (http:\\www.graphviz.org).
+It is possible to output files in DOT format, which is used to create drawings with Graphviz (http:\\www.graphviz.org).
 
-There is a HasseNode base class implementing the general properties of the elements in a Hasse diagram. Specific types of elementents will use classes that derive from this class. The StringHasseNode is currently used for testing. It is for Hasse diagrams showing relations between strings and substrings. A class for natural numbers with divisibility defining the partial order will be added and used for testing.
+There is a HasseNode base class implementing the general properties of the elements in a Hasse diagram. Specific types of elementents will use classes that derive from this class. The StringHasseNode is used for testing. It is for Hasse diagrams showing relations between strings and substrings.
+
+The motivation is from chemoinformatics where Hasse diagrams based on substructture/superstructure relations should be useful. Support for chemistry will be added as soon as main functions are implemented and stable. One idea is to add to the diagram common substructures of pairs of molecules. This should open up for new ways to analyse and characterise libraries of structures.

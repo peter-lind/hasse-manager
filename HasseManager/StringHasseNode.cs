@@ -72,7 +72,7 @@ namespace HasseManager
             byte[] KeyBytes = System.Text.ASCIIEncoding.ASCII.GetBytes(this.KeyString);
             byte[] KeyHash =new MD5CryptoServiceProvider().ComputeHash(KeyBytes );
             Int64 thisInt64 = BitConverter.ToInt64(KeyHash,1);
-            //System.Console.WriteLine(thisInt64.ToString() + " " + this.KeyString );
+            //SystemDiagnostics.Debug(thisInt64.ToString() + " " + this.KeyString );
             sum += (thisInt64 / 10000);
             _hash = sum; // cache this and do not reevaluate
             return sum;
@@ -108,7 +108,7 @@ namespace HasseManager
            return HitPosition;
         }
 
-        public override void GetMaxCommonFragments(HasseNode Node1, HasseNode Node2, bool dbg, HasseFragmentInsertionList NewFragmentList, HasseNodeCollection GlobalElementCollection,int MinimumOverlap)
+        public override void GetMaxCommonFragments(HasseNode Node1, HasseNode Node2, bool dbg, HasseFragmentInsertionQueue NewFragmentList, HasseNodeCollection GlobalElementCollection,int MinimumOverlap)
         {
             // this Node is directly below both Node1 and Node2
             // it can match several places
@@ -133,7 +133,7 @@ namespace HasseManager
             }
         }
 
-        private void ProcessMatch(Match M, int MinimumOverlap, HasseFragmentInsertionList NewFragmentList ,HasseNode [] PartlyMatchingNodes)
+        private void ProcessMatch(Match M, int MinimumOverlap, HasseFragmentInsertionQueue NewFragmentList ,HasseNode [] PartlyMatchingNodes)
             {
             string StringMCS = M.GetMatchString();
             if (StringMCS.Length >= MinimumOverlap)
@@ -147,7 +147,10 @@ namespace HasseManager
                 {
                     StringMCS = StringMCS + "*";
                 }
-                NewFragmentList.Add(new HasseNode[1] { this }, PartlyMatchingNodes  , StringMCS, "MCS");
+                if (StringMCS.Equals("*rdiskt")) { System.Diagnostics.Debugger.Break(); } // TODO remove
+                NewFragmentList.Add(new HasseNode[1] { this }, PartlyMatchingNodes  ,
+                    StringMCS, "MCS",
+                    HasseNodeTypes.FRAGMENT | HasseNodeTypes.MAX_COMMON_FRAGMENT ,null  );
             }
         }
 
@@ -170,13 +173,14 @@ namespace HasseManager
                             string strR = LargerNode.KeyString.Substring(MatchPosFirst + SmallString.Length);
                             if (strR.Length > 0 && (!strR.Equals("*")))
                             {
-                                if (MatchPosFirst  > 0 && (!LargerNode.KeyString.Substring (MatchPosFirst-1 ,1).Equals ("*")   ))
+                                if ((MatchPosFirst + SmallString.Length) > 0 && (!LargerNode.KeyString.Substring(MatchPosFirst + SmallString.Length - 1, 1).Equals("*")))
                                     strR = "*" + strR;
                                 DiffList.Add(strR);
                             }
                             MatchPosFirst = GetNextMatch(MatchPosFirst + 1, SmallString, LargerNode.KeyString);
                         }
-                        return DiffList.ToArray(); 
+            string[] s = DiffList.ToArray();
+            return s;
         }
 
 

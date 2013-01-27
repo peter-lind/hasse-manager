@@ -27,14 +27,79 @@ namespace HasseManager
     public class HasseEdge
         // Edge with upper and lower nodes, plus a label
     {
-        public HasseNode UpperNode;
-        public HasseNode LowerNode;
-        public HasseNode[] Label;
-        public string LabelText;
-        public HasseEdge()
+        private HasseNode upperNode;
+        private HasseNode lowerNode;
+        private HasseNode[] label;
+        private string labelText;
+        private List<HasseNode > linkedNodes = new List<HasseNode> ();
+        public bool Removed = false; // for debug
+
+        public HasseNode UpperNode
+        {
+            get
+            {
+                return upperNode;
+            }
+            set
+            {
+                upperNode = value;
+                if (value == null)
+                {
+                 //   System.Diagnostics.Debugger.Break();   
+                }
+            }
+        }
+
+        public HasseNode LowerNode
+        {
+            get
+            {
+                return lowerNode;
+            }
+            set
+            {
+                lowerNode = value;
+                if (value == null)
+                {
+                  //  System.Diagnostics.Debugger.Break();
+                }
+
+            }
+        }
+
+        public List<HasseNode> LinkedNodes
+        {
+            get
+            {
+                return linkedNodes;
+            }
+        }
+        public void  AddLinkedNode(HasseNode LinkedNode)
+            {
+                linkedNodes.Add(LinkedNode);
+            }
+       
+
+
+        public string LabelText
+        {
+            get
+            {
+                return labelText;
+            }
+            set
+            {
+                labelText = value;
+            }
+        }
+
+
+
+        public HasseEdge() 
         {
             //System.Diagnostics.Debugger.Break();   
         }
+
     }
     
 }
