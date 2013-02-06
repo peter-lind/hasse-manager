@@ -33,7 +33,7 @@ namespace HasseManager
             ROOT = 0,
             ELEMENT = 1,
             FRAGMENT = 2,
-            MAX_COMMON_FRAGMENT =4,
+            MAX_COMMON_FRAGMENT = 4,
             DIFFERENCE_FRAGMENT = 8,
             REAL = 16
         }
@@ -43,10 +43,11 @@ namespace HasseManager
         public List<HasseEdge> EdgesToCovered = new List<HasseEdge>();
 
         // elementary objects to be instantiated lazily when needed
-        private HasseNodeCollection m_elementarysubobjects;
+        private Dictionary<string, HasseNode> m_elementarysubobjects;
 
         // passed in to constructor, needed to avoid creation of duplicate objects
         private HasseNodeCollection globalElementCollection;
+        public bool AdditionCompleted = false;
         public int weight = 0;
         public int x = 0;
 
@@ -55,14 +56,14 @@ namespace HasseManager
         static internal int WasLargerThan = 0;
         static internal int id = 0;
         protected int MyId;
-        protected Int64  _hash;
+        protected Int64 _hash;
 
         internal HasseNodeTypes NodeType;
 
         public void AddLinkToEdge(HasseEdge E)
         {
             linkedEdges.Add(E); // to this node, add ref to edge
-            E.LinkedNodes.Add (this); // to the edge, add ref to this node
+            E.LinkedNodes.Add(this); // to the edge, add ref to this node
         }
         public void AddNodeType(HasseNodeTypes NewNodeType)
         { /*set the bit corresponding to NewNodeType */
@@ -74,6 +75,18 @@ namespace HasseManager
             // use bitwise AND to see if bit of type in question is set
             int tst = (int)(this.NodeType & NodeTypeToTestFor);
             return (tst > 0);
+        }
+
+        public bool IsLeafNode()
+        {
+            if (this.EdgesToCovering.Count == 0)
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
         }
 
         public bool debug_CheckedIsLarger
@@ -122,12 +135,12 @@ namespace HasseManager
         public abstract bool IsIdenticalTo(HasseNode elm);
         public abstract bool IsLargerThan(HasseNode smallobj);
         public abstract string KeyString { get; }
-        public abstract Int64  HashInt64();
-        public abstract void GetMaxCommonFragments(HasseNode Node1, HasseNode Node2, bool dbg, HasseFragmentInsertionQueue NewEdgeList, HasseNodeCollection GlobalElementCollection, int MinimumOverlap);
+        public abstract Int64 HashInt64();
+        public abstract bool GetMaxCommonFragments(HasseNode Node1, HasseNode Node2, bool dbg, HasseFragmentInsertionQueue NewEdgeList,  int MinimumOverlap);
         public abstract string[] GetDifferenceString(HasseNode LargerNode);
-        protected abstract HasseNodeCollection makeElementarySubobjects(HasseNodeCollection GlobalHasseVertexObjectCollection);
+        protected abstract Dictionary<string, HasseNode> makeElementarySubobjects(HasseNodeCollection GlobalHasseVertexObjectCollection);
 
-        public HasseNodeCollection getElementarySubobjects()
+        public Dictionary<string, HasseNode> getElementarySubobjects()
         {
             if (m_elementarysubobjects == null)
             {
@@ -136,13 +149,42 @@ namespace HasseManager
             return m_elementarysubobjects;
         }
 
+        public bool HasElement(HasseNode N)
+        {
+            if (m_elementarysubobjects.ContainsKey(N.KeyString)) { return true; } else { return false; }
+        }
         // Implement IComparable CompareTo method - provide default sort order.
         int IComparable.CompareTo(object node)
         {
             HasseNode Node = (HasseNode)node;
             return String.Compare(this.KeyString, Node.KeyString);
-
         }
+        
+        public bool HasElements(HasseNode[] Nodes)
+        {
+            foreach (HasseNode N in Nodes) // do this have all of these?
+            {
+                    if (!this.HasElement(N))
+                    {
+                        return false;
+                    }
+            }
+            return true;
+        }
+
+        public bool HasOneOfElements(HasseNode[] Nodes)
+        {
+            foreach (HasseNode N in Nodes) 
+            {
+                if (this.HasElement(N))
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+
 
         public HasseNode(HasseNodeTypes Type, HasseNodeCollection Elements)
         {
@@ -158,6 +200,21 @@ namespace HasseManager
             //string myString = enc.GetString(this.Hash());
             //return myString;
             return HashInt64().ToString();
+        }
+
+        public List <HasseNode> GetSiblings()
+        {
+            List<HasseNode> L = new List<HasseNode>();
+            foreach (HasseEdge EdgeDown in this.EdgesToCovered)
+            {
+                HasseNode LowerNode = EdgeDown.LowerNode;
+                foreach (HasseEdge EdgeUp in LowerNode.EdgesToCovering)
+                {
+                    if (this != EdgeUp.UpperNode  )
+                    L.Add(EdgeUp.UpperNode); 
+                }
+            }
+            return L;
         }
     }
 

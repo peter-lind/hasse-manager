@@ -26,13 +26,23 @@ namespace HasseManager
 {
     public class HasseFragmentInsertionQueue: Queue <FragmentToBeInserted > 
     {
-       // private Queue<FragmentToBeInserted> FragmentList = new Queue<FragmentToBeInserted>();
-        public void Add(HasseNode[] LowerNodes, HasseNode[] HigherNodes, string NewNodeContent,
-            string Origin, HasseNode.HasseNodeTypes NodeType, HasseEdge EdgeToLink)
+        HasseNodeCollection nodesInDiagram;
+        public HasseFragmentInsertionQueue(HasseNodeCollection _nodesInDiagram)
         {
-            if (EdgeToLink != null)
+            nodesInDiagram = _nodesInDiagram;
+        }
+       // private Queue<FragmentToBeInserted> FragmentList = new Queue<FragmentToBeInserted>();
+
+        public bool Add(HasseNode[] LowerNodes, HasseNode[] HigherNodes, string NewNodeContent,
+            string Origin, HasseNode.HasseNodeTypes NodeType, HasseEdge RelatedEdge)
+        {
+
+           // if (NewNodeContent.Equals("~~~~")) { System.Diagnostics.Debugger.Break(); }
+
+            if (nodesInDiagram.ContainsKey(NewNodeContent)) return false;
+            if (RelatedEdge != null)
             {
-                if (EdgeToLink.LowerNode == null || EdgeToLink.UpperNode == null)
+                if (RelatedEdge.LowerNode == null || RelatedEdge.UpperNode == null)
                 {
                     System.Diagnostics.Debugger.Break();
                 }
@@ -45,8 +55,10 @@ namespace HasseManager
             F.NewNodeContent = NewNodeContent;
             F.Origin = Origin;
             F.NodeType = NodeType;
-            F.LinkToEdge = EdgeToLink;
+            F.RelatedEdge = RelatedEdge;
             this.Enqueue (F);
+
+            return true;
         }
     }
     public class FragmentToBeInserted
@@ -56,7 +68,7 @@ namespace HasseManager
         public HasseNode[] HigherNodes;
         public string Origin;
         public HasseNode.HasseNodeTypes NodeType;
-        public HasseEdge LinkToEdge;
+        public HasseEdge RelatedEdge;
     }
 
 }

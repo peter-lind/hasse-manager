@@ -27,7 +27,6 @@ namespace HasseManager
 {
     public class HasseNodeCollection : Dictionary <string, HasseNode>
     {
-
         public HasseNodeCollection()
             : base()
         { 
@@ -53,6 +52,36 @@ namespace HasseManager
         {
             get { return (HasseNodeCollection)this.MemberwiseClone(); }
         }
+
+        public List<HasseNode> NodesHavingElements(HasseNode[] Elements)
+        {
+            // TODO sort elements with least common first
+            List<HasseNode> L = new List<HasseNode>();
+            foreach (HasseNode C in this.Values ){
+                if (C.HasElements(Elements))
+                {
+                    L.Add(C);
+                }
+            }
+            return L; 
+        }
+
+
+        public List<HasseNode> NodesWithOneOfElements(HasseNode[] Elements)
+        {
+            // must test all of elements before give up
+            // TODO sort elements with most common first
+            List<HasseNode> L = new List<HasseNode>();
+            foreach (HasseNode C in this.Values)
+            {
+                if (C.HasOneOfElements(Elements))
+                {
+                    L.Add(C);
+                }
+            }
+            return L;
+        }
+
 
         public List<HasseNode> AllSiblingsTo(HasseNode ReferenceNode)
         {

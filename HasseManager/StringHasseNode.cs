@@ -38,6 +38,7 @@ namespace HasseManager
         //***********************************
 
         static StringMatcher Matcher = new StringMatcher(); 
+        static int CountMCS=0;
 
         private string str = "";
         const bool DEBUG_LABELLED_OBJECTS = false;
@@ -99,7 +100,7 @@ namespace HasseManager
 
         public override int elementCount()
         {
-             return getElementarySubobjects().Values.Count; 
+             return getElementarySubobjects().Count; 
         }
 
         private int GetNextMatch(int StartFrom,string SearchFor, string SearchIn)
@@ -108,15 +109,17 @@ namespace HasseManager
            return HitPosition;
         }
 
-        public override void GetMaxCommonFragments(HasseNode Node1, HasseNode Node2, bool dbg, HasseFragmentInsertionQueue NewFragmentList, HasseNodeCollection GlobalElementCollection,int MinimumOverlap)
+        public override bool GetMaxCommonFragments(HasseNode Node1, HasseNode Node2, bool dbg,
+            HasseFragmentInsertionQueue NewFragmentList, int MinimumOverlap)
         {
+            
             // this Node is directly below both Node1 and Node2
             // it can match several places
-             
+            CountMCS++;    
             string strSeed = this.KeyString.Replace("*", "");
             string str1 = Node1.KeyString;
             string str2 = Node2.KeyString;
-            
+            bool FoundMCS = false;    
             // we are only interested in matches strictly larger than seed
             if (strSeed.Length + 1 > MinimumOverlap) { MinimumOverlap = strSeed.Length + 1; }
 
@@ -124,18 +127,27 @@ namespace HasseManager
             while(MatchPosA>-1){
                 int MatchPosB = GetNextMatch(0,strSeed,str2);
                 while(MatchPosB>-1){
+                    
                     Match M = new Match( strSeed,MatchPosA, 0, str1, MatchPosB, 0, str2);
                     M.ExpandMCSMatch();
-                    ProcessMatch(M, MinimumOverlap, NewFragmentList,  new HasseNode[2] { Node1,Node2 });
+                    //MatchPosA= M.LastPosInA;
+                    //MatchPosB = M.LastPosInB; 
+                    if (true == ProcessMatch(M, MinimumOverlap, NewFragmentList, new HasseNode[2] { Node1, Node2 }))
+                    { FoundMCS = true; }
                     MatchPosB = GetNextMatch(MatchPosB +1,strSeed,str2);
                 }
                 MatchPosA = GetNextMatch(MatchPosA +1,strSeed,str1);
             }
+           
+            return FoundMCS;
         }
 
-        private void ProcessMatch(Match M, int MinimumOverlap, HasseFragmentInsertionQueue NewFragmentList ,HasseNode [] PartlyMatchingNodes)
+
+
+        private bool ProcessMatch(Match M, int MinimumOverlap, HasseFragmentInsertionQueue NewFragmentList ,HasseNode [] PartlyMatchingNodes)
             {
             string StringMCS = M.GetMatchString();
+            bool matchWasNew = false;          
             if (StringMCS.Length >= MinimumOverlap)
             {
                 // deal with the max common substructure:
@@ -147,11 +159,21 @@ namespace HasseManager
                 {
                     StringMCS = StringMCS + "*";
                 }
-                if (StringMCS.Equals("*rdiskt")) { System.Diagnostics.Debugger.Break(); } // TODO remove
-                NewFragmentList.Add(new HasseNode[1] { this }, PartlyMatchingNodes  ,
+
+                // Do not return back what was started from:
+                if (StringMCS.Equals(PartlyMatchingNodes[0].KeyString) | StringMCS.Equals(PartlyMatchingNodes[1].KeyString ))
+                {
+                    return false;
+                }
+ 
+                if (StringMCS.Equals("~~~~")) { System.Diagnostics.Debugger.Break(); } // TODO remove
+                if (true == NewFragmentList.Add(new HasseNode[1] { this }, PartlyMatchingNodes,
                     StringMCS, "MCS",
-                    HasseNodeTypes.FRAGMENT | HasseNodeTypes.MAX_COMMON_FRAGMENT ,null  );
+                    HasseNodeTypes.FRAGMENT | HasseNodeTypes.MAX_COMMON_FRAGMENT, null))
+                    matchWasNew = true;
             }
+            //if (matchWasNew) { System.Diagnostics.Debugger.Break(); }
+            return matchWasNew;
         }
 
 
@@ -179,6 +201,7 @@ namespace HasseManager
                             }
                             MatchPosFirst = GetNextMatch(MatchPosFirst + 1, SmallString, LargerNode.KeyString);
                         }
+            //return new string[]{};
             string[] s = DiffList.ToArray();
             return s;
         }
@@ -197,11 +220,11 @@ namespace HasseManager
         }
 
 
-        protected override HasseNodeCollection makeElementarySubobjects(HasseNodeCollection GlobalHasseNodeCollection)
+        protected override Dictionary<string, HasseNode> makeElementarySubobjects(HasseNodeCollection GlobalHasseNodeCollection)
         {
             //watch out for infinite recursion as we are called from New and also may call New
 
-            HasseNodeCollection elmobjects = new HasseNodeCollection();
+            Dictionary<string, HasseNode> elmobjects = new Dictionary<string, HasseNode>();
             if (this.NodeType == HasseNodeTypes.ROOT  ) return (elmobjects);
             int i = 0;
             string str2 = str.Replace("*", "");
@@ -224,6 +247,12 @@ namespace HasseManager
                 //todo change to better names for elements collections
                 if (!elmobjects.ContainsKey(buf))
                     elmobjects.Add(buf, element);
+            }
+            // if only one elementary object, then use same object for this (as item) and that (as element) 
+            if (elmobjects.Count == 1 && str.Length ==1 && str[0]!='*') {
+                elmobjects.Clear();
+                elmobjects.Add(this.KeyString , this);
+                this.AddNodeType(HasseNodeTypes.ELEMENT);
             }
 
             return elmobjects;
@@ -260,7 +289,7 @@ namespace HasseManager
             // we require that this is strictly larger than Node2
             const bool DBG = false;
             CountComparisons++;
-            if (CountComparisons % 100000 == 0)
+            if (CountComparisons % 10000 == 0)
             {
                 System.Diagnostics.Debug.WriteLine("comparisons:     \t" + CountComparisons.ToString() + "\t of which where '>';\t" + WasLargerThan.ToString());
             }
