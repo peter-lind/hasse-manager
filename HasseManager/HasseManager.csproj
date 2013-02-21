@@ -31,6 +31,18 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="indigo-dotnet, Version=1.1.4654.20631, Culture=neutral, PublicKeyToken=ca8e3320bc4499e0, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\indigo-dotnet-1.1.5-win\indigo-dotnet.dll</HintPath>
+    </Reference>
+    <Reference Include="indigo-inchi-dotnet, Version=1.1.4654.20632, Culture=neutral, PublicKeyToken=6a31cb7055c16a21, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\indigo-dotnet-1.1.5-win\indigo-inchi-dotnet.dll</HintPath>
+    </Reference>
+    <Reference Include="indigo-renderer-dotnet, Version=1.1.4654.20631, Culture=neutral, PublicKeyToken=09f0421d14bc0b92, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\indigo-dotnet-1.1.5-win\indigo-renderer-dotnet.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core">
       <RequiredTargetFramework>3.5</RequiredTargetFramework>
@@ -48,6 +60,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ChemHasseNode.cs" />
     <Compile Include="DotFileWriter.cs" />
     <Compile Include="Form1.cs">
       <SubType>Form</SubType>
@@ -55,11 +68,13 @@
     <Compile Include="Form1.Designer.cs">
       <DependentUpon>Form1.cs</DependentUpon>
     </Compile>
+    <Compile Include="GraphVizManager.cs" />
     <Compile Include="HasseDiagram.cs" />
     <Compile Include="HasseDiagramStats.cs" />
     <Compile Include="HasseEdge.cs" />
     <Compile Include="HasseFragmentInsertionList.cs" />
     <Compile Include="HasseNode.cs" />
+    <Compile Include="HasseNodeFactory.cs" />
     <Compile Include="HasseValidation.cs" />
     <Compile Include="HasseNodeCollection.cs" />
     <Compile Include="Program.cs" />

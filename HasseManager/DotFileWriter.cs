@@ -20,6 +20,15 @@ namespace HasseManager
                   DotFile.WriteLine("{");
                   //DotFile.WriteLine("size =\"4,5\";");
         }
+
+
+        private void WriteNode(HasseNode N)
+        {
+            DotFile.Write(DoubleQuoted(N.KeyString));
+            if (!N.HasNodeType(HasseNode.HasseNodeTypes.REAL) ){  
+            DotFile.WriteLine(" [style=dashed] ;");
+            }
+        }
         private void WriteEdge(HasseEdge E)
         {
             HasseNode Node1 = E.LowerNode;
@@ -28,23 +37,13 @@ namespace HasseManager
             throw new Exception ("disallowed character: double quote");
             }
 
-            DotFile.Write("\""); // opening quote
-            if (Node1.NodeType == HasseNode.HasseNodeTypes.ROOT)
-            {
-                DotFile.Write("{Ø}");
-            }
-            else
-            {
-                DotFile.Write(Node1.KeyString); // node 1 label
-            }
-            DotFile.Write("\""); // closing quote
+            DotFile.Write(DoubleQuoted(Node2.KeyString));  // node 2 label
+
             DotFile.Write(" -> "); // arrow
-            DotFile.Write("\"");   // opening quote
-            DotFile.Write(Node2.KeyString);  // node 2 label
-            DotFile.Write("\" ");  // closing quote and space
-            
-            
-            DotFile.Write("[label=\"");
+
+            DotFile.Write(DoubleQuoted(Node1.KeyString));  // node 1 label
+                         
+            DotFile.Write("[dir=back label=\"");
             DotFile.Write(E.LabelText  );
             DotFile.Write ("\"]");
             
@@ -56,21 +55,55 @@ namespace HasseManager
             DotFile.Close();
         }
 
-        public void WriteDotFile()
+        public int WriteDotFile()
         {
+
+
             List<HasseNode> Nodes;
             Nodes = NodeCollection.Values.ToList();
+
+            /*
+            Nodes = new List<HasseNode> ();
+            foreach (HasseNode N in NodeCollection.Values )
+            {
+                if (N.KeyString.Equals ("discrimination" ) ){
+                    N.GetThisAndAllAbove(Nodes,0);
+                }
+            }
+            List<HasseNode> Nodes2 = new List<HasseNode>(Nodes);
+            foreach (HasseNode N in Nodes2)
+                N.GetThisAndAllBelow(Nodes, 0);
+            */
+
+
             Nodes.Sort();
 
             OpenFile("C:\\temp\\testdotfile1.dot");
+            int EdgeCount = 0;
+            int VisitCode = new System.Random().Next();
+
+            foreach (HasseNode Node in Nodes)
+            {
+                WriteNode(Node);
+            }            
+
             foreach (HasseNode Node in Nodes )
             {
-                foreach (HasseEdge E in Node.EdgesToCovering )
+                foreach (HasseEdge E in Node.EdgesToCovered )               
                 {
-                    WriteEdge(E);
+                    if (!E.IsVisited(VisitCode)) // avoid duplication
+                    {
+                        WriteEdge(E);
+                        E.Visit(VisitCode);
+                        EdgeCount++;
+                    }
                 }
             }
             CloseFile();
+            return EdgeCount;
+        }
+        private string DoubleQuoted(string s){
+            return "\"" + s + "\"";
         }
     }
 }

@@ -22,7 +22,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-
+using System.Security.Cryptography;
 namespace HasseManager
 {
     public abstract class HasseNode : IComparable
@@ -48,8 +48,9 @@ namespace HasseManager
         // passed in to constructor, needed to avoid creation of duplicate objects
         private HasseNodeCollection globalElementCollection;
         public bool AdditionCompleted = false;
-        public int weight = 0;
+        public int w = 0;
         public int x = 0;
+        private int vCode = 0;
 
         private bool _debug_CheckedIsLarger = false;
         static internal int CountComparisons = 0;
@@ -59,6 +60,61 @@ namespace HasseManager
         protected Int64 _hash;
 
         internal HasseNodeTypes NodeType;
+
+        public bool IsVisited(int c)
+        {
+            if (vCode == c) return true; else return false;
+        }
+        public int Weight()
+        // return total count leafs above 
+        {
+            if (w != 0) return w;
+            if (true == this.IsLeafNode()) return 1;
+            int sum = 0;
+            foreach (HasseEdge E in this.EdgesToCovering)
+            {
+                sum += E.UpperNode.Weight();
+            }
+            return sum;
+        }
+        public static int GetRandomInt()
+        {
+             System.Random R = new Random();
+              return R.Next();
+        }
+        public void GetThisAndAllAbove(List<HasseNode> L, int visitCode)
+        {
+            if (visitCode == 0)
+            {
+                visitCode = GetRandomInt(); 
+            }
+
+            if (IsVisited(visitCode)) return;
+
+            foreach (HasseEdge E in this.EdgesToCovering)
+            {
+                E.UpperNode.GetThisAndAllAbove(L, visitCode);
+            }
+            L.Add(this);
+            vCode = visitCode; // mark as visited
+        }
+        public void GetThisAndAllBelow(List<HasseNode> L, int visitCode)
+        {
+            if (visitCode == 0)
+            {
+                System.Random R = new Random();
+                visitCode = R.Next();
+            }
+
+            if (IsVisited(visitCode)) return;
+
+            foreach (HasseEdge E in this.EdgesToCovered)
+            {
+                E.LowerNode.GetThisAndAllBelow(L, visitCode);
+            }
+            L.Add(this);
+            vCode = visitCode; // mark as visited
+        }
 
         public void AddLinkToEdge(HasseEdge E)
         {
@@ -131,14 +187,25 @@ namespace HasseManager
         }
 
         public abstract int elementCount();
-        public abstract bool ContainsAllElementsIn(HasseNodeCollection col);
-        public abstract bool IsIdenticalTo(HasseNode elm);
+        //public abstract bool ContainsAllElementsIn(HasseNodeCollection col);
+        //public abstract bool IsIdenticalTo(HasseNode elm);
         public abstract bool IsLargerThan(HasseNode smallobj);
         public abstract string KeyString { get; }
-        public abstract Int64 HashInt64();
-        public abstract bool GetMaxCommonFragments(HasseNode Node1, HasseNode Node2, bool dbg, HasseFragmentInsertionQueue NewEdgeList,  int MinimumOverlap);
+      //  public abstract Int64 HashInt64();
+        public abstract bool GetMaxCommonFragments(HasseNode Node1, HasseNode Node2, bool dbg, HasseFragmentInsertionQueue NewFragmentList, int MinimumOverlap);
         public abstract string[] GetDifferenceString(HasseNode LargerNode);
         protected abstract Dictionary<string, HasseNode> makeElementarySubobjects(HasseNodeCollection GlobalHasseVertexObjectCollection);
+
+
+        public  bool ContainsAllElementsIn(HasseNodeCollection col)
+        {
+            foreach (HasseNode n in col.Values)
+            {
+                if (!getElementarySubobjects().Values.Contains(n))
+                    return false;
+            }
+            return true;
+        }
 
         public Dictionary<string, HasseNode> getElementarySubobjects()
         {
@@ -159,22 +226,22 @@ namespace HasseManager
             HasseNode Node = (HasseNode)node;
             return String.Compare(this.KeyString, Node.KeyString);
         }
-        
+
         public bool HasElements(HasseNode[] Nodes)
         {
             foreach (HasseNode N in Nodes) // do this have all of these?
             {
-                    if (!this.HasElement(N))
-                    {
-                        return false;
-                    }
+                if (!this.HasElement(N))
+                {
+                    return false;
+                }
             }
             return true;
         }
 
         public bool HasOneOfElements(HasseNode[] Nodes)
         {
-            foreach (HasseNode N in Nodes) 
+            foreach (HasseNode N in Nodes)
             {
                 if (this.HasElement(N))
                 {
@@ -202,7 +269,7 @@ namespace HasseManager
             return HashInt64().ToString();
         }
 
-        public List <HasseNode> GetSiblings()
+        public List<HasseNode> GetSiblings()
         {
             List<HasseNode> L = new List<HasseNode>();
             foreach (HasseEdge EdgeDown in this.EdgesToCovered)
@@ -210,12 +277,43 @@ namespace HasseManager
                 HasseNode LowerNode = EdgeDown.LowerNode;
                 foreach (HasseEdge EdgeUp in LowerNode.EdgesToCovering)
                 {
-                    if (this != EdgeUp.UpperNode  )
-                    L.Add(EdgeUp.UpperNode); 
+                    if (this != EdgeUp.UpperNode)
+                        L.Add(EdgeUp.UpperNode);
                 }
             }
             return L;
         }
+
+        public Int64 HashInt64()
+        {
+            if (_hash != 0) return _hash;
+            int CountNodesAbove = this.EdgesToCovering.Count();
+            Int64 sum = 0;
+            if (CountNodesAbove > 0) // make a sum of hashes from nodes above
+            {
+                foreach (HasseEdge E in this.EdgesToCovering)
+                {
+                    Int64 b = E.UpperNode.HashInt64();
+                    sum += (b / 10000);
+                }
+
+                // IMPORTANT - now shuffle bits in sum
+                // otherwise hash from top nodes will eventually be divided away
+                byte[] SumBytes = BitConverter.GetBytes(sum); // bytes from the Int64
+                byte[] SumHash = new MD5CryptoServiceProvider().ComputeHash(SumBytes); // hash the hash
+                sum = BitConverter.ToInt64(SumHash, 1); // back to Int64
+            }
+
+            // so far hash is only based on nodes above. NOw add part from this
+            byte[] KeyBytes = System.Text.ASCIIEncoding.ASCII.GetBytes(this.KeyString);
+            byte[] KeyHash = new MD5CryptoServiceProvider().ComputeHash(KeyBytes);
+            Int64 thisInt64 = BitConverter.ToInt64(KeyHash, 1);
+            //SystemDiagnostics.Debug(thisInt64.ToString() + " " + this.KeyString );
+            sum += (thisInt64 / 10000);
+            _hash = sum; // cache this and do not reevaluate
+            return sum;
+        }
+
     }
 
 }

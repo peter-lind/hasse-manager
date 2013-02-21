@@ -37,6 +37,8 @@ namespace HasseManager
         System.Diagnostics.Stopwatch sw = new System.Diagnostics.Stopwatch();
 
         int CountAdditions = 0;
+        //private Type hasseNodeType;
+        private HasseNodeFactory nodeFactory;
 
 
         public const int LOG_NOTHING = 0;
@@ -60,20 +62,26 @@ namespace HasseManager
         public const int DEBUGLEVEL = 0;//4 + 8;
         public const int CHECK_LEVEL = CHECK_NOTHING;
         public bool MAKE_MCS_AT_ONCE = true;
-        public bool MAKE_LABELLED_NODES = true;
+        public bool MAKE_LABELLED_NODES = false;
         public const int MINIMUM_FRAGMENT_SIZE = 0;
         // ==========================================
 
 
-        public HasseDiagram(HasseNode Root)
+        public HasseDiagram(HasseNodeFactory.NodeType t )
         {
-            HasseDiagramNodes = new HasseNodeCollection();
-            DifferenceNodes = new HasseNodeCollection();
-            ElementaryHasseNodes = new HasseNodeCollection();
+          // construct new HasseDiagram  
+            HasseDiagramNodes = new HasseNodeCollection();  //collection nodes in diagram
+            DifferenceNodes = new HasseNodeCollection();    //collection of objects expressing difference
+            ElementaryHasseNodes = new HasseNodeCollection(); // collection of elements
+
+            // factory for nodes, set its nodetype and let it have access to global elements collection
+            nodeFactory = new HasseNodeFactory(t,ElementaryHasseNodes ); 
+            // a queue for nodes to be created after current node is fully processed
             FragmentInsertionQueue = new HasseFragmentInsertionQueue(HasseDiagramNodes);
 
-            RootNode = Root;
-            this.AddNode(RootNode);
+            // create the root node as part of construction
+            RootNode = nodeFactory.NewNode("", HasseNode.HasseNodeTypes.ROOT);
+            HasseDiagramNodes.Add("{Ø}", RootNode);
         }
 
 
@@ -228,14 +236,20 @@ namespace HasseManager
         }
 
 
-        public void AddNode(HasseNode newNode)
+        public void AddNode(string NodeContentString)
         {
+            HasseNode newNode=  this.nodeFactory.NewNode (NodeContentString, HasseNode.HasseNodeTypes.REAL );  
             addNode(newNode, null, null);
 
             while (FragmentInsertionQueue.Count > 0)
             {
                 FragmentToBeInserted F = FragmentInsertionQueue.Dequeue();
-                HasseNode Frag = new StringHasseNode(F.NewNodeContent, HasseNode.HasseNodeTypes.FRAGMENT, ElementaryHasseNodes);
+
+
+                HasseNode Frag = this.nodeFactory.NewNode(F.NewNodeContent, HasseNode.HasseNodeTypes.FRAGMENT);
+                //HasseNode Frag = new ChemHasseNode(F.NewNodeContent, HasseNode.HasseNodeTypes.FRAGMENT, ElementaryHasseNodes);
+                
+//                HasseNode Frag = new StringHasseNode(F.NewNodeContent, HasseNode.HasseNodeTypes.FRAGMENT, ElementaryHasseNodes);
 
                 bool NodeWasInserted = addNode(Frag, null, null);
             }
@@ -433,49 +447,54 @@ namespace HasseManager
             N1.EdgesToCovering.Add(E);
             N2.EdgesToCovered.Add(E);
 
-            string[] EdgeLabels = N1.GetDifferenceString(N2);
-            E.LabelText = String.Join(", ", EdgeLabels);
-
-
-            foreach (string s in EdgeLabels)
+            // analyse difference between smaller and larger.
+            // output can be the *-marked smaller node + all difference fragments
+            // or can be partial 
+            if (MAKE_LABELLED_NODES)
             {
-                if (E.LabelText.Contains("~~~")) //for debug
+                string[] EdgeLabels = N1.GetDifferenceString(N2);
+                E.LabelText = String.Join(", ", EdgeLabels);
+
+
+                foreach (string s in EdgeLabels)
                 {
-                    System.Diagnostics.Debugger.Break();
-                }
-
-
-                // For difference fragments, add link between fragment and those
-                // edges giving this Node as difference.  
-                // The link is for efficiency of updates of difference items, it is not an edge in hasse diagram
-
-                if (N1 != RootNode) // do not make difference here
-                {
-                    HasseNode DifferenceNode = null;
-                    if (DifferenceNodes.ContainsKey(s))  // if such node already exists in differenc nodes
+                    if (E.LabelText.Contains("~~~")) //for debug
                     {
-                        DifferenceNode = DifferenceNodes[s]; //  get that node
+                        System.Diagnostics.Debugger.Break();
                     }
-                    else
-                        if (HasseDiagramNodes.ContainsKey(s))  // if already exists in diagram nodes
-                        {
-                            DifferenceNode = HasseDiagramNodes[s]; // get reference
-                            // add difference type
-                            DifferenceNode.AddNodeType(HasseNode.HasseNodeTypes.DIFFERENCE_FRAGMENT);
-                            // and add to difference catalog
-                            DifferenceNodes.Add(DifferenceNode.KeyString, DifferenceNode);
-                        }
-                        else // not exist anywhere
-                        {
-                            // create and add to differene node catalog
-                            DifferenceNode = new StringHasseNode(
-                                s, HasseNode.HasseNodeTypes.FRAGMENT | HasseNode.HasseNodeTypes.DIFFERENCE_FRAGMENT,
-                                this.ElementaryHasseNodes);
-                            DifferenceNodes.Add(DifferenceNode.KeyString, DifferenceNode);
-                        }
 
-                    DifferenceNode.AddLinkToEdge(E); // create the link
 
+                    // For difference fragments, add link between fragment and those
+                    // edges giving this Node as difference.  
+                    // The link is for efficiency of updates of difference items, it is not an edge in hasse diagram
+
+                    if (N1 != RootNode) // do not make difference here
+                    {
+                        HasseNode DifferenceNode = null;
+                        if (DifferenceNodes.ContainsKey(s))  // if such node already exists in differenc nodes
+                        {
+                            DifferenceNode = DifferenceNodes[s]; //  get that node
+                        }
+                        else
+                            if (HasseDiagramNodes.ContainsKey(s))  // if already exists in diagram nodes
+                            {
+                                DifferenceNode = HasseDiagramNodes[s]; // get reference
+                                // add difference type
+                                DifferenceNode.AddNodeType(HasseNode.HasseNodeTypes.DIFFERENCE_FRAGMENT);
+                                // and add to difference catalog
+                                DifferenceNodes.Add(DifferenceNode.KeyString, DifferenceNode);
+                            }
+                            else // not exist anywhere
+                            {
+                                // create and add to differene node catalog
+                                DifferenceNode = new StringHasseNode(
+                                    s, HasseNode.HasseNodeTypes.FRAGMENT | HasseNode.HasseNodeTypes.DIFFERENCE_FRAGMENT,
+                                    this.ElementaryHasseNodes);
+                                DifferenceNodes.Add(DifferenceNode.KeyString, DifferenceNode);
+                            }
+
+                        DifferenceNode.AddLinkToEdge(E); // create the link
+                    }
                 }
             }
             return E;
@@ -521,7 +540,7 @@ namespace HasseManager
         {
             string spaces = new string('-', level * 2);
             //if (Node.NodesCovering().Values.Count >5  )
-            System.Diagnostics.Debug.WriteLine(Node.weight.ToString() + "\t" + spaces + Node.KeyString);
+            System.Diagnostics.Debug.WriteLine(Node.Weight().ToString() + "\t" + spaces + Node.KeyString);
 
             foreach (HasseEdge e in Node.EdgesToCovering)
             {
@@ -718,7 +737,9 @@ namespace HasseManager
             if ((!newNode.IsLeafNode() & (newNode.AdditionCompleted == true))) { 
                 return; // slight optimisation
             }
-
+            /*
+            // look at difference of new node relative to those covered
+            // make list of elements in the 'added' part
             List<HasseNode > ElementList = new List<HasseNode> ();
             foreach (HasseEdge E in newNode.EdgesToCovered)
             {
@@ -732,7 +753,8 @@ namespace HasseManager
                 }
             }
             HasseNode[] Elements = ElementList.ToArray(); 
-            //HasseNode[] Elements = newNode.getElementarySubobjects().Values.ToArray();
+            */
+              HasseNode[] Elements = newNode.getElementarySubobjects().Values.ToArray();
 
 
             List<HasseNode> MCSPartners = new List<HasseNode>();
@@ -752,7 +774,7 @@ namespace HasseManager
 
             float selectivity = (float)MCSPartners.Count / (float)HasseDiagramNodes.Count;
            // if (selectivity < 0.01) System.Diagnostics.Debugger.Break();   
-            System.Diagnostics.Debug.WriteLine(selectivity);     
+           // System.Diagnostics.Debug.WriteLine(selectivity);     
 
 
             foreach (HasseNode N in MCSPartners)

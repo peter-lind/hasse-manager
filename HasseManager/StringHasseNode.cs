@@ -23,7 +23,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Diagnostics;
-using System.Security.Cryptography;
+
 
 namespace HasseManager
 {
@@ -46,38 +46,6 @@ namespace HasseManager
 
 
 
-        public override Int64 HashInt64()
-        {
-            if (_hash!=0) return _hash;
-
-            int CountNodesAbove = this.EdgesToCovering.Count();
-            //int CountAllBits = 0;
-            //byte[][] BytesFromAll = new byte[CountNodesAbove+1][];
-            //int i = 0;
-            Int64 sum = 0;
-            if (CountNodesAbove > 0)
-            {
-                foreach (HasseEdge E in this.EdgesToCovering)
-                {
-                    Int64 b = E.UpperNode.HashInt64();
-                    sum += (b / 10000);
-                }
-
-                // important - now shuffle bits in sum
-                // otherwise hash from top nodes will eventually be divided away
-                byte[] SumBytes = BitConverter.GetBytes(sum);
-                byte[] SumHash = new MD5CryptoServiceProvider().ComputeHash(SumBytes);
-                sum = BitConverter.ToInt64(SumHash, 1);
-            }
-
-            byte[] KeyBytes = System.Text.ASCIIEncoding.ASCII.GetBytes(this.KeyString);
-            byte[] KeyHash =new MD5CryptoServiceProvider().ComputeHash(KeyBytes );
-            Int64 thisInt64 = BitConverter.ToInt64(KeyHash,1);
-            //SystemDiagnostics.Debug(thisInt64.ToString() + " " + this.KeyString );
-            sum += (thisInt64 / 10000);
-            _hash = sum; // cache this and do not reevaluate
-            return sum;
-        }
 
         public StringHasseNode(string s, HasseNodeTypes ElementType, HasseNodeCollection globalElementCollection)
             : base(ElementType, globalElementCollection )
@@ -209,26 +177,35 @@ namespace HasseManager
 
 
 
-        public override bool ContainsAllElementsIn(HasseNodeCollection col)
-        {
-            foreach (StringHasseNode n in col.Values)
-            {
-                if (!this.getElementarySubobjects().Values.Contains(n))
-                    return false;
-            }
-            return true;
-        }
 
+
+
+
+        /*
+        public override bool IsIdenticalTo(HasseNode Node)
+        {
+            if (this.str.Equals(Node.KeyString))
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
+        */
 
         protected override Dictionary<string, HasseNode> makeElementarySubobjects(HasseNodeCollection GlobalHasseNodeCollection)
         {
             //watch out for infinite recursion as we are called from New and also may call New
 
             Dictionary<string, HasseNode> elmobjects = new Dictionary<string, HasseNode>();
-            if (this.NodeType == HasseNodeTypes.ROOT  ) return (elmobjects);
-            int i = 0;
+            if (this.NodeType == HasseNodeTypes.ROOT) return (elmobjects);
+
+
+            //int i = 0;
             string str2 = str.Replace("*", "");
-            for (i = 0; i <= str2.Length - 1; i++)
+            for (int i = 0; i <= str2.Length - 1; i++)
             {
                 string buf = str2.Substring(i, 1);
 
@@ -248,28 +225,20 @@ namespace HasseManager
                 if (!elmobjects.ContainsKey(buf))
                     elmobjects.Add(buf, element);
             }
+
+
+
             // if only one elementary object, then use same object for this (as item) and that (as element) 
-            if (elmobjects.Count == 1 && str.Length ==1 && str[0]!='*') {
+            if (elmobjects.Count == 1 && str.Length == 1 && str[0] != '*')
+            {
                 elmobjects.Clear();
-                elmobjects.Add(this.KeyString , this);
+                elmobjects.Add(this.KeyString, this);
                 this.AddNodeType(HasseNodeTypes.ELEMENT);
             }
 
             return elmobjects;
         }
 
-
-        public override bool IsIdenticalTo(HasseNode Node)
-        {
-            if (this.str.Equals(Node.KeyString))
-            {
-                return true;
-            }
-            else
-            {
-                return false;
-            }
-        }
 
 
         public override bool IsLargerThan(HasseNode smallHasseElement)

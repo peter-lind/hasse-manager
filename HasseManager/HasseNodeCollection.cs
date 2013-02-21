@@ -129,7 +129,8 @@ namespace HasseManager
 
             foreach (HasseNode existingelement in this.Values )
             {
-                if (elm1.IsIdenticalTo(existingelement))
+                 if (elm1.KeyString.Equals (existingelement.KeyString  ) )
+                //if (elm1.IsIdenticalTo(existingelement))
                 {
                     return existingelement;
                 }

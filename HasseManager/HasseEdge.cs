@@ -27,12 +27,22 @@ namespace HasseManager
     public class HasseEdge
         // Edge with upper and lower nodes, plus a label
     {
+        private int visitCode;
         private HasseNode upperNode;
         private HasseNode lowerNode;
         private HasseNode[] label;
         private string labelText;
         private List<HasseNode > linkedNodes = new List<HasseNode> ();
         public bool Removed = false; // for debug
+
+        public void Visit(int vCode)
+        {
+            visitCode = vCode;
+        }
+        public bool IsVisited(int vCode)
+        {
+            if (visitCode == vCode) return true; else return false;
+        }
 
         public HasseNode UpperNode
         {

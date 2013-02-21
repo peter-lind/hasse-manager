@@ -36,10 +36,28 @@ namespace HasseManager
             InitializeComponent();
         }
 
+       
+       
+
+        private void ButtonWordFragmentation_Click_1(object sender, EventArgs e)
+        {
+            openFileDialog1.DefaultExt= ".txt";
+            if (openFileDialog1.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+            {
+                Tester.test4(openFileDialog1.FileName);
+                
+            }
+
+        }
+
         private void button1_Click(object sender, EventArgs e)
         {
-            Tester mytester = new Tester();
-            mytester.test4();
+            GraphVizManager.RunDot (@"c:\temp\testdotfile1.dot" ,@"c:\temp\graph.gif" );
+        }
+
+        private void button2_Click(object sender, EventArgs e)
+        {
+            Tester.chemtest(); 
         }
     }
 }
