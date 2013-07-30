@@ -47,8 +47,8 @@ namespace HasseManager
 
 
 
-        public StringHasseNode(string s, HasseNodeTypes ElementType, HasseNodeCollection globalElementCollection)
-            : base(ElementType, globalElementCollection )
+        public StringHasseNode(string s, HasseNodeTypes ElementType, HasseNodeCollection globalElementCollection, string debugInfo)
+            : base(ElementType, globalElementCollection , debugInfo)
         {
 
             // TODO remove this check
@@ -64,6 +64,10 @@ namespace HasseManager
             Debug.WriteLineIf(DEBUG_NEW, "                                          created  " + s);
 
             str = s;
+        }
+        public override void CreateImage()
+        {
+            ; // no image for this
         }
 
         public override int elementCount()
@@ -100,7 +104,8 @@ namespace HasseManager
                     M.ExpandMCSMatch();
                     //MatchPosA= M.LastPosInA;
                     //MatchPosB = M.LastPosInB; 
-                    if (true == ProcessMatch(M, MinimumOverlap, NewFragmentList, new HasseNode[2] { Node1, Node2 }))
+                    string debugInfo = "MCS " + Node1.GetID().ToString () + " " + Node2.GetID().ToString ();  
+                    if (true == ProcessMatch(M, MinimumOverlap, NewFragmentList, new HasseNode[2] { Node1, Node2 }, debugInfo))
                     { FoundMCS = true; }
                     MatchPosB = GetNextMatch(MatchPosB +1,strSeed,str2);
                 }
@@ -112,7 +117,7 @@ namespace HasseManager
 
 
 
-        private bool ProcessMatch(Match M, int MinimumOverlap, HasseFragmentInsertionQueue NewFragmentList ,HasseNode [] PartlyMatchingNodes)
+        private bool ProcessMatch(Match M, int MinimumOverlap, HasseFragmentInsertionQueue NewFragmentList ,HasseNode [] PartlyMatchingNodes, string debugInfo)
             {
             string StringMCS = M.GetMatchString();
             bool matchWasNew = false;          
@@ -136,7 +141,7 @@ namespace HasseManager
  
                 if (StringMCS.Equals("~~~~")) { System.Diagnostics.Debugger.Break(); } // TODO remove
                 if (true == NewFragmentList.Add(new HasseNode[1] { this }, PartlyMatchingNodes,
-                    StringMCS, "MCS",
+                    StringMCS, debugInfo ,
                     HasseNodeTypes.FRAGMENT | HasseNodeTypes.MAX_COMMON_FRAGMENT, null))
                     matchWasNew = true;
             }
@@ -217,7 +222,7 @@ namespace HasseManager
                 }
                 else
                 {
-                    element = new StringHasseNode(buf, HasseNodeTypes.ELEMENT, GlobalHasseNodeCollection);
+                    element = new StringHasseNode(buf, HasseNodeTypes.ELEMENT, GlobalHasseNodeCollection, "from " + this.ID.ToString () );
                     GlobalHasseNodeCollection.Add(buf, element);
                 }
 
@@ -388,7 +393,7 @@ namespace HasseManager
 
         public  string ID
         {
-            get { return base.MyId.ToString(); }
+            get { return base.ID.ToString(); }
         }
 
 
@@ -521,6 +526,26 @@ namespace HasseManager
             }
         }
 
+        public override  HasseFingerprint CreateFingerprint()
+        {
+            StringHasseFingerprint fp = new StringHasseFingerprint();
+            return fp;
+        }
+
     }
+
+
+    public  class StringHasseFingerprint:HasseFingerprint
+    {
+        public override void AddBitsOf(HasseFingerprint F)
+        {
+            throw new NotImplementedException();
+        }
+        public override bool ContainsAllBitsOf(HasseFingerprint F)
+        {
+            throw new NotImplementedException();
+        }
+    }
+
 
 }

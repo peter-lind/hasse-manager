@@ -21,16 +21,18 @@ namespace HasseManager
             elementsCollection = elements;
         }
 
-        public HasseNode NewNode(string s, HasseNode.HasseNodeTypes e)
+
+        public HasseNode NewNode(string s, HasseNode.HasseNodeTypes e, string debugInfo)
         {
-            
+            //if (s.Contains("xyz")) System.Diagnostics.Debugger.Break();   
+
             switch (nType)
             {
                 case NodeType.STRING  :
-                    StringHasseNode SN = new StringHasseNode(s, e, elementsCollection);
+                    StringHasseNode SN = new StringHasseNode(s, e, elementsCollection,debugInfo);
                     return SN;
                 case NodeType.CHEM  :
-                    ChemHasseNode CN = new ChemHasseNode(s, e, elementsCollection);
+                    ChemHasseNode CN = new ChemHasseNode(s, e, elementsCollection, debugInfo);
                     return CN;
                 default :
                     throw new Exception ("HasseNodeFactory: unhandled NodeType");

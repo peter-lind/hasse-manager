@@ -52,7 +52,7 @@ namespace HasseManager
 
         private void button1_Click(object sender, EventArgs e)
         {
-            GraphVizManager.RunDot (@"c:\temp\testdotfile1.dot" ,@"c:\temp\graph.gif" );
+            GraphVizManager.RunDot (@"c:\temp\testdotfile.dot" ,@"c:\temp\graph","svg" );
         }
 
         private void button2_Click(object sender, EventArgs e)

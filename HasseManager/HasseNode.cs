@@ -42,12 +42,15 @@ namespace HasseManager
         public List<HasseEdge> EdgesToCovering = new List<HasseEdge>();
         public List<HasseEdge> EdgesToCovered = new List<HasseEdge>();
 
+        public HasseFingerprint BitArrayFingerPrint;
+
         // elementary objects to be instantiated lazily when needed
         private Dictionary<string, HasseNode> m_elementarysubobjects;
 
         // passed in to constructor, needed to avoid creation of duplicate objects
         private HasseNodeCollection globalElementCollection;
         public bool AdditionCompleted = false;
+        public string DrawingColor = "";
         public int w = 0;
         public int x = 0;
         private int vCode = 0;
@@ -55,11 +58,33 @@ namespace HasseManager
         private bool _debug_CheckedIsLarger = false;
         static internal int CountComparisons = 0;
         static internal int WasLargerThan = 0;
-        static internal int id = 0;
-        protected int MyId;
+        static internal int counterForID = 0;
+        protected int ID;
         protected Int64 _hash;
+        public string ImageFileName = "";
+        public string LabelText;
 
         internal HasseNodeTypes NodeType;
+
+
+        public HasseNode(HasseNodeTypes Type, HasseNodeCollection Elements, string debugInfo)
+        {
+            counterForID += 1;
+            ID = counterForID;
+            this.NodeType = Type;
+            this.globalElementCollection = Elements;
+            if (debugInfo.Length == 0)
+                debugInfo = ID.ToString();
+            this.LabelText = debugInfo;
+        }
+
+
+        public int LevelFromRoot=0;
+
+        public int GetID()
+        {
+            return ID;
+        }
 
         public bool IsVisited(int c)
         {
@@ -191,6 +216,7 @@ namespace HasseManager
         //public abstract bool IsIdenticalTo(HasseNode elm);
         public abstract bool IsLargerThan(HasseNode smallobj);
         public abstract string KeyString { get; }
+        public abstract void CreateImage();
       //  public abstract Int64 HashInt64();
         public abstract bool GetMaxCommonFragments(HasseNode Node1, HasseNode Node2, bool dbg, HasseFragmentInsertionQueue NewFragmentList, int MinimumOverlap);
         public abstract string[] GetDifferenceString(HasseNode LargerNode);
@@ -253,14 +279,6 @@ namespace HasseManager
 
 
 
-        public HasseNode(HasseNodeTypes Type, HasseNodeCollection Elements)
-        {
-            id += 1;
-            MyId = id;
-            this.NodeType = Type;
-            this.globalElementCollection = Elements;
-        }
-
         public string HashString()
         {
             //System.Text.Encoding enc = System.Text.Encoding.UTF8 ;
@@ -314,6 +332,13 @@ namespace HasseManager
             return sum;
         }
 
+        // require derived classes can create empty fingerprints
+        public abstract HasseFingerprint CreateFingerprint();
+    }
+    public abstract class HasseFingerprint
+    {
+        public abstract void AddBitsOf(HasseFingerprint F);
+        public abstract bool ContainsAllBitsOf(HasseFingerprint F);
     }
 
 }

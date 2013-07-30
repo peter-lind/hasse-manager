@@ -10,10 +10,10 @@ C:\Hasse-manager\HasseManager\obj\Debug\HasseManager.exe
 C:\Hasse-manager\HasseManager\obj\Debug\HasseManager.pdb
 C:\Hasse-manager\HasseManager\bin\Debug\HasseManager.exe
 C:\Hasse-manager\HasseManager\bin\Debug\HasseManager.pdb
-C:\Hasse-manager\HasseManager\obj\Debug\ResolveAssemblyReference.cache
 C:\Hasse-manager\HasseManager\obj\Debug\HasseManager.Form1.resources
 C:\Hasse-manager\HasseManager\obj\Debug\HasseManager.Properties.Resources.resources
 C:\Hasse-manager\HasseManager\obj\Debug\HasseManager.csproj.GenerateResource.Cache
 C:\Hasse-manager\HasseManager\bin\Debug\indigo-dotnet.dll
 C:\Hasse-manager\HasseManager\bin\Debug\indigo-inchi-dotnet.dll
 C:\Hasse-manager\HasseManager\bin\Debug\indigo-renderer-dotnet.dll
+C:\Hasse-manager\HasseManager\obj\Debug\HasseManager.csprojResolveAssemblyReference.cache
