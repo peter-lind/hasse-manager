@@ -85,7 +85,7 @@ namespace HasseManager
             //HDM.BFGTopOrder.DebugReport()
             //TopologicalSort.topsort(HDM.AllNodes,true);
             //HDM.draw();
-            System.Diagnostics.Debug.WriteLine(HasseDiagramStats.Report(HDM.HasseDiagramNodes));
+            System.Diagnostics.Debug.WriteLine(HasseDiagramStats.Report(HDM.HasseDiagramNodes,HDM.RootNode ));
 
         }
 
@@ -240,11 +240,20 @@ namespace HasseManager
             HasseDiagram HDM = new HasseDiagram(HasseNodeFactory.NodeType.CHEM);
             HasseNodeCollection elements = new HasseNodeCollection();
 
-            //ChemHasseNode A = (ChemHasseNode ) HDM.AddNode("c1cn[H]cc1");
-            //ChemHasseNode B = (ChemHasseNode) HDM.AddNode("c1cn[C]cc1");
+            //ChemHasseNode A = (ChemHasseNode)HDM.AddNode("c1ccccccc[nH]1"); // azonine
+            //ChemHasseNode B = (ChemHasseNode)HDM.AddNode("C12=C(C=NC=C1)NC1=C2C=CC=C1");  // pyrido indol
+            //ChemHasseNode C = (ChemHasseNode)HDM.AddNode("c1cccc2[nH]ccc21"); // indol
+
+           // ChemHasseNode A = (ChemHasseNode)HDM.AddNode(@"[NH3+]C");
+            //ChemHasseNode B = (ChemHasseNode)HDM.AddNode(@"[NH2]CC");
+                
             //bool tst = A.IsLargerThan(B);
             //tst = B.IsLargerThan(A);
+            //A.GetMaxCommonFragments(A, B);
+            //tst = A.IsLargerThan(C);
+            //tst = C.IsLargerThan(A);
 
+            // pyridoindol larger than azonine
 
             System.Threading.Thread.CurrentThread.Priority = System.Threading.ThreadPriority.BelowNormal;     
             System.Diagnostics.Stopwatch sw = new System.Diagnostics.Stopwatch();
@@ -254,22 +263,94 @@ namespace HasseManager
             //foreach (IndigoObject item in indigo.iterateSDFile(@"C:\temp\benzodiazepines.sdf"))
             //foreach (IndigoObject item in indigo.iterateSDFile(@"C:\temp\monoamtrain_x.sdf"))
             //foreach (IndigoObject item in indigo.iterateSDFile(@"C:\HassePub\Datasets\Jorissen\compounds_1st.sdf"))
-            foreach (IndigoObject item in indigo.iterateSDFile(@"C:\HassePub\Datasets\benzodiazepines_v2.sdf"))
+        //foreach (IndigoObject item in indigo.iterateSDFile(@"C:\HassePub\Datasets\benzodiazepines_v4.sdf"))
+            //    foreach (IndigoObject item in indigo.iterateSDFile(@"C:\HassePub\Datasets\small_set.sdf"))
+            // foreach (IndigoObject item in indigo.iterateSDFile(@"C:\HassePub\Datasets\chembl_pyridines.sdf"))
+            //foreach (IndigoObject item in indigo.iterateSDFile(@"C:\HassePub\Datasets\ChEBI_anilines_480-500.sdf"))
+            //foreach (IndigoObject item in indigo.iterateSDFile(@"C:\HassePub\Datasets\ChEBI_valines.sdf"))
+            foreach (IndigoObject item in indigo.iterateSDFile(@"C:\HassePub\Datasets\ChEBI_valines_v21.sdf"))
             {
+              
+                if (item.isChiral() == false) continue;
                 count++;
+                    //System.Diagnostics.Debugger.Break();   
+                if (count >24) break; //28
                 //if (count % 2 == 0)
-                HDM.AddNode(item.molfile());
-                if (count > 75) break;
-                System.Diagnostics.Debug.WriteLine(count);
+
+       //         HasseNode N = HDM.CreateNewNode(item);
+                //if (N.IsValid())
+                //{
+                 System.Diagnostics.Stopwatch sw2 = new System.Diagnostics.Stopwatch ();
+                 sw2.Start();
+                 try
+                {
+                    HasseNode N = HDM.CreateNewNode(item.molfile());
+                    if (item.hasProperty("CHEMBL ID"))
+                    {
+                        string ChemblID = item.getProperty("CHEMBL ID");
+                        N.SetName(ChemblID);
+                    } else if (item.hasProperty("ChEBI ID")){
+                        string ChebiID = item.getProperty("ChEBI ID");
+                        N.SetName(ChebiID);
+                    }
+                    else
+                    {
+                        N.SetName(count.ToString());
+                    }  
+
+                    HDM.AddNode(N);
+                    System.Diagnostics.Debug.WriteLine("---   " + N.KeyString);
+
+                }
+                 catch (Exception ex)
+                 {
+                     System.Diagnostics.Debug.WriteLine ("WARNING: could not add node: " + ex.ToString ()) ;  
+                 }
+             }
+
+        List<HasseNode> subset = new List<HasseNode>();
+
+            /*
+        foreach (HasseNode N in HDM.HasseDiagramNodes.Values)
+        {
+            if (N.NodeType != HasseNode.HasseNodeTypes.ROOT)
+            {
+                float weight = N.Weight();
+                N.SetName("w=" + weight.ToString());
+                float w = 5F * weight / 29F;
+                if (w < 1) w = 1F;
+                if (w > 3.5) w = 3.5F;
+         //       N.CreateImage(w);
+                N.CreateImage();
+                //if (weight > 20) subset.Add(N);
+            }
+            
+        }
+         */
+             //DotFileWriter DW = new DotFileWriter(HDM.HasseDiagramNodes, subset, "C:\\temp\\testdotfile.dot");
+            DotFileWriter DW = new DotFileWriter(HDM.HasseDiagramNodes, "C:\\temp\\testdotfile.dot");
+
+            int cnt = 0;
+            foreach (HasseNode N in HDM.HasseDiagramNodes.Values)
+            {
+               
+                if (N.NodeType != HasseNode.HasseNodeTypes.ROOT)
+                {
+                    cnt++;
+                    N.SetName(cnt.ToString());
+                    N.CreateImage();
+                }
             }
 
-
-            DotFileWriter DW = new DotFileWriter(HDM.HasseDiagramNodes, "C:\\temp\\testdotfile.dot");
             DW.SetLabelsToNumericSequence();
             DW.SetDrawingColors();
-            DW.LabelMode = labelMode.USE_MOLNAME ;
-            DW.LabelMode = labelMode.USE_NODE_LABEL;
-            DW.UseImage = false; 
+            DW.LabelMode = labelMode.NO_LABELS; // for figure 5
+            DW.directionMode = graphDirection.RIGHT   ;
+
+            //DW.LabelMode = labelMode.USE_NODE_LABEL;
+            //DW.LabelMode = labelMode.USE_NODE_ID;
+            
+            DW.UseImage = true; 
             DW.WriteEdgeLabels = false;
             //DW.FilterMaxLevelFromRoot = 4;
             DW.WriteDotFile();
@@ -283,9 +364,9 @@ namespace HasseManager
             foreach (HasseNode N in HDM.HasseDiagramNodes.Values )
             {
                 if (N.HasNodeType (HasseNode.HasseNodeTypes.FRAGMENT ))  
-                System.Diagnostics.Debug.WriteLine(N.KeyString);   
+                System.Diagnostics.Debug.WriteLine(N.KeyString + " " + N.Weight().ToString() );   
             }
-             System.Diagnostics.Debug.WriteLine (     HasseDiagramStats.Report(HDM.HasseDiagramNodes)); 
+             System.Diagnostics.Debug.WriteLine (     HasseDiagramStats.Report(HDM.HasseDiagramNodes, HDM.RootNode )); 
         }
 
     }

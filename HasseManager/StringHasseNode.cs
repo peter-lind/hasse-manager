@@ -64,12 +64,17 @@ namespace HasseManager
             Debug.WriteLineIf(DEBUG_NEW, "                                          created  " + s);
 
             str = s;
+            base.size = s.Length; 
         }
         public override void CreateImage()
         {
-            ; // no image for this
+             // no image for this
+            throw new NotImplementedException();
         }
-
+        public override void CreateImage(float weight)
+        {
+            throw new NotImplementedException();
+        }
         public override int elementCount()
         {
              return getElementarySubobjects().Count; 

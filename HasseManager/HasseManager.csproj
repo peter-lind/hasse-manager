@@ -17,6 +17,21 @@
     <UpgradeBackupLocation>
     </UpgradeBackupLocation>
     <OldToolsVersion>3.5</OldToolsVersion>
+    <PublishUrl>publish\</PublishUrl>
+    <Install>true</Install>
+    <InstallFrom>Disk</InstallFrom>
+    <UpdateEnabled>false</UpdateEnabled>
+    <UpdateMode>Foreground</UpdateMode>
+    <UpdateInterval>7</UpdateInterval>
+    <UpdateIntervalUnits>Days</UpdateIntervalUnits>
+    <UpdatePeriodically>false</UpdatePeriodically>
+    <UpdateRequired>false</UpdateRequired>
+    <MapFileExtensions>true</MapFileExtensions>
+    <ApplicationRevision>0</ApplicationRevision>
+    <ApplicationVersion>1.0.0.%2a</ApplicationVersion>
+    <IsWebBootstrapper>false</IsWebBootstrapper>
+    <UseApplicationTrust>false</UseApplicationTrust>
+    <BootstrapperEnabled>true</BootstrapperEnabled>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -38,15 +53,15 @@
   <ItemGroup>
     <Reference Include="indigo-dotnet, Version=1.1.4654.20631, Culture=neutral, PublicKeyToken=ca8e3320bc4499e0, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\indigo-dotnet-1.1.5-win\indigo-dotnet.dll</HintPath>
+      <HintPath>..\indigo-dotnet-1.1.11-win\indigo-dotnet.dll</HintPath>
     </Reference>
     <Reference Include="indigo-inchi-dotnet, Version=1.1.4654.20632, Culture=neutral, PublicKeyToken=6a31cb7055c16a21, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\indigo-dotnet-1.1.5-win\indigo-inchi-dotnet.dll</HintPath>
+      <HintPath>..\indigo-dotnet-1.1.11-win\indigo-inchi-dotnet.dll</HintPath>
     </Reference>
     <Reference Include="indigo-renderer-dotnet, Version=1.1.4654.20631, Culture=neutral, PublicKeyToken=09f0421d14bc0b92, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\indigo-dotnet-1.1.5-win\indigo-renderer-dotnet.dll</HintPath>
+      <HintPath>..\indigo-dotnet-1.1.11-win\indigo-renderer-dotnet.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core">
@@ -112,6 +127,18 @@
     <Compile Include="StringHasseNode.cs" />
     <Compile Include="Tester.cs" />
     <Compile Include="TopologicalSort.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <BootstrapperPackage Include="Microsoft.Net.Client.3.5">
+      <Visible>False</Visible>
+      <ProductName>.NET Framework 3.5 SP1 Client Profile</ProductName>
+      <Install>false</Install>
+    </BootstrapperPackage>
+    <BootstrapperPackage Include="Microsoft.Net.Framework.3.5.SP1">
+      <Visible>False</Visible>
+      <ProductName>.NET Framework 3.5 SP1</ProductName>
+      <Install>true</Install>
+    </BootstrapperPackage>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

@@ -49,17 +49,20 @@ namespace HasseManager
 
         // passed in to constructor, needed to avoid creation of duplicate objects
         private HasseNodeCollection globalElementCollection;
-        public bool AdditionCompleted = false;
+        //public bool AdditionCompleted = false;
         public string DrawingColor = "";
         public int w = 0;
         public int x = 0;
         private int vCode = 0;
-
+        protected bool _isvalid = false;
         private bool _debug_CheckedIsLarger = false;
         static internal int CountComparisons = 0;
         static internal int WasLargerThan = 0;
         static internal int counterForID = 0;
+        static internal System.Random R = new Random() ;
         protected int ID;
+        protected int size;
+        protected string Name;
         protected Int64 _hash;
         public string ImageFileName = "";
         public string LabelText;
@@ -86,25 +89,56 @@ namespace HasseManager
             return ID;
         }
 
+        public bool IsValid()
+        {
+            return _isvalid;
+        }
+
+        public virtual int Size()
+        {
+            return size;
+        }
+
+        public virtual string GetName()
+        {
+            return Name;
+        }
+        public virtual void SetName(string n)
+        {
+            Name = n;
+        }
+
+        
+
         public bool IsVisited(int c)
         {
             if (vCode == c) return true; else return false;
         }
+
+
         public int Weight()
+        {
+            int visitCode = GetRandomInt();
+            return Weight(visitCode);
+        }
+
+        public int Weight(int visitCode)
         // return total count leafs above 
         {
-            if (w != 0) return w;
-            if (true == this.IsLeafNode()) return 1;
+            if (IsVisited(visitCode)) {return 0; }// I have been counted already - do not count me again
+            vCode = visitCode; // mark as visited
             int sum = 0;
+            //if (true == this.IsLeafNode()) sum++;           // count me now
+            if (this.HasNodeType ( HasseNodeTypes.REAL ) )sum++;           // count me now
             foreach (HasseEdge E in this.EdgesToCovering)
             {
-                sum += E.UpperNode.Weight();
+                sum += E.UpperNode.Weight(visitCode );
             }
             return sum;
         }
+
         public static int GetRandomInt()
         {
-             System.Random R = new Random();
               return R.Next();
         }
         public void GetThisAndAllAbove(List<HasseNode> L, int visitCode)
@@ -217,6 +251,7 @@ namespace HasseManager
         public abstract bool IsLargerThan(HasseNode smallobj);
         public abstract string KeyString { get; }
         public abstract void CreateImage();
+        public abstract void CreateImage(float weight);
       //  public abstract Int64 HashInt64();
         public abstract bool GetMaxCommonFragments(HasseNode Node1, HasseNode Node2, bool dbg, HasseFragmentInsertionQueue NewFragmentList, int MinimumOverlap);
         public abstract string[] GetDifferenceString(HasseNode LargerNode);

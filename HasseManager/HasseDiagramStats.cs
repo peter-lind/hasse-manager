@@ -26,26 +26,39 @@ namespace HasseManager
 {
     public static class HasseDiagramStats
     {
-        public static String Report(HasseNodeCollection nodes)
+        public static String Report(HasseNodeCollection nodes, HasseNode rootNode)
         {
+            int countLeaves = 0;
+            int countReals = 0;
+            foreach (HasseNode node in nodes.Values)
+            {
+                if (node.IsLeafNode()) countLeaves++;
+                if (node.HasNodeType (HasseNode.HasseNodeTypes.REAL)) countReals ++;
+            }
+  
+            StringBuilder sb = new StringBuilder();
+  
+            sb.AppendLine("Leaf count: " + countLeaves.ToString () );
+            sb.AppendLine("REAL count: " + countReals.ToString () );
 
             // how selective are the root nodes?
             // the average root node, how many parents, of all?
 
 
-            StringBuilder sb = new StringBuilder();
             List<HasseNodeCollection> NodesInLevel = new List<HasseNodeCollection>();
             int CountUpwardEdges = 0;
-            int CountTopmostNodes = 0;
+            int CountLeafNodes = 0;
+            int countAllLeaves = 0;
             HasseNodeCollection NodesOnThisLevel = new HasseNodeCollection();
-            foreach (HasseNode rootnode in nodes.Values)
-            {
-                if ((rootnode.NodeType & HasseNode.HasseNodeTypes.ELEMENT)>0)
-                {
-                    NodesOnThisLevel.Add(rootnode.KeyString, rootnode);
-                }
-            }
-            sb.AppendLine("Element type nodes:    \t" + NodesOnThisLevel.Count.ToString());
+            NodesOnThisLevel.Add(rootNode.KeyString , rootNode); 
+            //foreach (HasseNode rootnode in nodes.Values)
+            //{
+            //    if ((rootnode.NodeType & HasseNode.HasseNodeTypes.ELEMENT)>0)
+            //    {
+            //        NodesOnThisLevel.Add(rootnode.KeyString, rootnode);
+            //    }
+            //}
+            //sb.AppendLine("Element type nodes:    \t" + NodesOnThisLevel.Count.ToString());
 
 
             HasseNodeCollection NodesOnThisLevelPlusOne = new HasseNodeCollection();
@@ -53,11 +66,11 @@ namespace HasseManager
             for (int level = 1; ;level++ )
             {
                 CountUpwardEdges = 0;
-                CountTopmostNodes = 0;
+                CountLeafNodes = 0;
                 foreach (HasseNode node in NodesOnThisLevel.Values)
                 {
                     node.LevelFromRoot = level;
-                    //sb.AppendLine(node.UniqueString + " "); 
+                    //sb.AppendLine(node.KeyString  + " "); 
                     foreach (HasseEdge EdgeUpToParent in node.EdgesToCovering )
                     {
                         HasseNode Parent = EdgeUpToParent.UpperNode;
@@ -68,10 +81,10 @@ namespace HasseManager
                         }
                     }
                     if (node.EdgesToCovering.Count == 0)
-                    { CountTopmostNodes++; }
+                    { CountLeafNodes++; countAllLeaves++; }
                 }
-                
-                sb.AppendLine("level " + level.ToString() + " nodes, parent, topmost:\t" + NodesOnThisLevel.Count.ToString() + "\t" + CountUpwardEdges.ToString () + "\t" + CountTopmostNodes.ToString () );
+
+                sb.AppendLine("at level " + level.ToString() + ";\tnodes: " + NodesOnThisLevel.Count.ToString() + "\tsum upward edges: " +  CountUpwardEdges.ToString() + "\t count leaf nodes: " +  CountLeafNodes.ToString());
 
                 NodesInLevel.Add(NodesOnThisLevel);
                if (NodesOnThisLevelPlusOne.Count ==0) {break;} 
@@ -79,6 +92,8 @@ namespace HasseManager
                 NodesOnThisLevelPlusOne = new  HasseNodeCollection();
             }
             sb.AppendLine("total node count: " + nodes.Count.ToString());
+            sb.AppendLine("total leaves count: " + countAllLeaves.ToString());
+
 
             //double selectivity = 0;
           //  selectivity = (((double)sumCovering / (double)sumRootNodes) / (double)sumNonRootNodes);

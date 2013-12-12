@@ -18,7 +18,7 @@ namespace HasseManager
         }
 
 
-        public void WriteImageFile(string fname, IndigoObject mol, string format)
+        public void WriteImageFile(string fname, IndigoObject mol, string format, string comment,float weight)
         {
             switch (format)
             {
@@ -33,11 +33,17 @@ namespace HasseManager
             // http://ggasoftware.com/opensource/indigo/api/options#rendering
             //png, svg, pdf are allowed. On Windows, emf is also allowed.
             indigo.setOption ("render-bond-length","18");
-            //indigo.setOption ("render-image-size",100);
+            
+            indigo.setOption ("render-relative-thickness",  Math.Round (weight,2).ToString ());
             
             indigo.setOption("render-coloring", true);
-            indigo.setOption("render-margins", 10, 10);
-            indigo.setOption("render-atom-ids-visible", true);
+            indigo.setOption("render-margins", 1, 1);
+            //indigo.setOption("render-atom-ids-visible", true);
+            indigo.setOption("render-comment", comment);
+            indigo.setOption("render-implicit-hydrogens-visible", false);
+            indigo.setOption("render-label-mode", "hetero");
+            indigo.setOption("render-comment-font-size", "15");
+            indigo.setOption("render-comment-offset", "6");
             mol.layout();
             //indigo.setOption("render-comment", "N-Hydroxyaniline")
             renderer.renderToFile(mol, fname);
