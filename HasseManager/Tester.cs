@@ -154,7 +154,6 @@ namespace HasseManager
 
             HDM.ContractChains2();
 
-
             HDM.HasseDiagramNodes.Sort();
             foreach (HasseNode n in HDM.HasseDiagramNodes.Values)
             {
@@ -224,14 +223,7 @@ namespace HasseManager
 
             /*
             ChemHasseNode L_ALA = new ChemHasseNode("N[C@@H](C)C(=O)O", HasseNode.HasseNodeTypes.REAL, allNodes);
-           // ChemHasseNode D_ALA = new ChemHasseNode("N[C@H](C)C(=O)O", HasseNode.HasseNodeTypes.REAL, allNodes);
-            ChemHasseNode D_ALA = new ChemHasseNode("NCC(=O)O", HasseNode.HasseNodeTypes.REAL, allNodes);
-
-             bool t;
-            t=L_ALA.IsLargerThan(D_ALA);
-            t=D_ALA.IsLargerThan(L_ALA);
-            L_ALA.GetMaxCommonFragments(L_ALA, D_ALA,false,q,0);
-            string[] d;
+           ChemHasseNode D_ALA = new ChemHasseNode("N[C@H](C)C(=O)O", HasseNode.HasseNodeTypes.REAL, allNodes);
             d=L_ALA.GetDifferenceString (D_ALA);
             d = D_ALA.GetDifferenceString(L_ALA);
 */
