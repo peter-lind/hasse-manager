@@ -33,7 +33,6 @@ namespace HasseManager
             
         }
 
-
         public void Sort()
         {
             // Todo: this can probably be done without copying all
@@ -221,7 +220,6 @@ namespace HasseManager
             foreach (HasseNode existingelement in this.Values )
             {
                  if (elm1.KeyString.Equals (existingelement.KeyString  ) )
-                //if (elm1.IsIdenticalTo(existingelement))
                 {
                     return existingelement;
                 }

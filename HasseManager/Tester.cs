@@ -42,21 +42,13 @@ namespace HasseManager
 
             bool test = Node2.IsLargerThan(Node1);
             System.Diagnostics.Debug.Assert(test);
-            //Debug.Assert(Node3.IsLargerThan(Node2))
-            //Debug.Assert(Not Node1.IsIdenticalTo(Node2))
 
-            //Dim Node4 As New clsCharString("XABX", HasseElement.EnumType.REAL, Elements1)
-            //Dim Node5 As New clsCharString("YABY", HasseElement.EnumType.REAL, Elements1)
             System.Collections.Queue q = new System.Collections.Queue();
-            //Node1.makeMaxCommonSubStruc(Node4, Node5, False, q)
-            //Dim mcs As HasseElement = CType(q.Dequeue, HasseElement)
-            //Debug.Assert(mcs.UniqueString.Equals("AB"))
 
             for (int i = 1; i <= 1000; i++)
             {
                 string buf = "";
                 int strLen = Convert.ToInt32(rnd.Next(1, 10));
-                //8
                 //random string length
                 for (int j = 1; j <= strLen; j++)
                 {
@@ -82,9 +74,7 @@ namespace HasseManager
                 }
                 HDM.AddNode(buf);
             }
-            //HDM.BFGTopOrder.DebugReport()
-            //TopologicalSort.topsort(HDM.AllNodes,true);
-            //HDM.draw();
+
             System.Diagnostics.Debug.WriteLine(HasseDiagramStats.Report(HDM.HasseDiagramNodes,HDM.RootNode ));
 
         }

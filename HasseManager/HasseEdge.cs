@@ -104,7 +104,6 @@ namespace HasseManager
         }
 
 
-
         public HasseEdge() 
         {
             //System.Diagnostics.Debugger.Break();   

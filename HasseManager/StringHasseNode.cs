@@ -53,10 +53,6 @@ namespace HasseManager
 
             // TODO remove this check
             if (s.Contains("**")) { throw new Exception("double stars"); }
-            if (s.Equals ("~~~~~~"))
-            {
-                System.Diagnostics.Debugger.Break();
-            }
 
 
             if (string.IsNullOrEmpty(s) && (this.NodeType != HasseNode.HasseNodeTypes.ROOT )   )

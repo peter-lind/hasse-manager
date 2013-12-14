@@ -65,6 +65,7 @@ namespace HasseManager
         public const int MINIMUM_FRAGMENT_SIZE = 1;
         // ==========================================
 
+
         public HasseDiagram(HasseNodeFactory.NodeType t )
         {
           // construct new HasseDiagram  
@@ -94,7 +95,6 @@ namespace HasseManager
                 bool NodeWasInserted = addNode(Frag, null, null);
             }
                     }
-
 
 
         public int DeleteNodesWithOneCover()

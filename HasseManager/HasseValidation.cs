@@ -26,7 +26,6 @@ namespace HasseManager
 {
     class HasseValidation
     {
-
         public static void CheckCollectionsHaveSameObjects(HasseNodeCollection correctLub, HasseNodeCollection c2)
         {
             foreach (HasseNode elm1 in correctLub.Values )

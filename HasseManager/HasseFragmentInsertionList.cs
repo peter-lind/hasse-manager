@@ -31,13 +31,10 @@ namespace HasseManager
         {
             nodesInDiagram = _nodesInDiagram;
         }
-       // private Queue<FragmentToBeInserted> FragmentList = new Queue<FragmentToBeInserted>();
 
         public bool Add(HasseNode[] LowerNodes, HasseNode[] HigherNodes, string NewNodeContent,
             string Origin, HasseNode.HasseNodeTypes NodeType, HasseEdge RelatedEdge)
         {
-
-           // if (NewNodeContent.Equals("~~~~")) { System.Diagnostics.Debugger.Break(); }
 
             if (nodesInDiagram.ContainsKey(NewNodeContent)) return false;
             if (RelatedEdge != null)

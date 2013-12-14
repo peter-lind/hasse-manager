@@ -12,9 +12,6 @@ namespace HasseManager
         Indigo indigo = new Indigo();
         public void test1()
         {
-            //string strQmol= "NC(C1:C:C(C=CCNC2:C:C(C(F)(F)F):C(OC3CCN(C(C)=N)CC3):C:C:2):C:C:C:1)=N";
-            //string strQmol = "N(C(=N([H])[H])c1cccc(/C=C/CN(c2ccc(OC3CCN(/C(=N/[H])/C)CC3)c(C(F)(F)F)c2)[H])c1)([H])[H]"; //problem!
-           //string strQmol = "NC(C1:C:C(C=CCNC2:C:C(C(F)(F)F):C(OC3CCN(C(C)=N)CC3):C:C:2):C:C:C:1)=N"; // OK
 
             string strQmol = "[H]/N=C(C)/N1CCCCC1"; //shows problem!
             //string strQmol = "[H]/N=C(C)/N"; // still shows problem
@@ -26,8 +23,6 @@ namespace HasseManager
 
 
             IndigoObject mol = indigo.loadMolecule(strLmol);
-
-           // RemoveHydrogenConstraints(qmol);
 
             System.Diagnostics.Debug.WriteLine("QueryMol 1: " + qmol.smiles());
 
@@ -41,7 +36,6 @@ namespace HasseManager
             System.Diagnostics.Debug.WriteLine("QueryMol 2: " + qmol.smiles());
             System.Diagnostics.Debug.WriteLine("Largermol is : " + mol.smiles());
 
-
             IndigoObject matcher = indigo.substructureMatcher(mol, ChemHasseNode.SUBSTRUCTURE_MATCH_PARAM);
             indigo.setOption("embedding-uniqueness", "atoms");
             foreach (IndigoObject m in matcher.iterateMatches(qmol))
@@ -49,8 +43,6 @@ namespace HasseManager
                 System.Diagnostics.Debug.WriteLine(m.highlightedTarget().smiles()); 
             }
         }
-
-
 
         private void RemoveHydrogenConstraints(IndigoObject mol)
         {

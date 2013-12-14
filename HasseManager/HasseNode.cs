@@ -49,7 +49,6 @@ namespace HasseManager
 
         // passed in to constructor, needed to avoid creation of duplicate objects
         private HasseNodeCollection globalElementCollection;
-        //public bool AdditionCompleted = false;
         public string DrawingColor = "";
         public int w = 0;
         public int x = 0;
@@ -68,7 +67,6 @@ namespace HasseManager
         public string LabelText;
 
         internal HasseNodeTypes NodeType;
-
 
         public HasseNode(HasseNodeTypes Type, HasseNodeCollection Elements, string debugInfo)
         {
@@ -107,7 +105,6 @@ namespace HasseManager
         {
             Name = n;
         }
-
         
 
         public bool IsVisited(int c)
@@ -246,13 +243,10 @@ namespace HasseManager
         }
 
         public abstract int elementCount();
-        //public abstract bool ContainsAllElementsIn(HasseNodeCollection col);
-        //public abstract bool IsIdenticalTo(HasseNode elm);
         public abstract bool IsLargerThan(HasseNode smallobj);
         public abstract string KeyString { get; }
         public abstract void CreateImage();
         public abstract void CreateImage(float weight);
-      //  public abstract Int64 HashInt64();
         public abstract bool GetMaxCommonFragments(HasseNode Node1, HasseNode Node2, bool dbg, HasseFragmentInsertionQueue NewFragmentList, int MinimumOverlap);
         public abstract string[] GetDifferenceString(HasseNode LargerNode);
         protected abstract Dictionary<string, HasseNode> makeElementarySubobjects(HasseNodeCollection GlobalHasseVertexObjectCollection);

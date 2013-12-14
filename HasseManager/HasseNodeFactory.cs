@@ -25,7 +25,6 @@ namespace HasseManager
 
         public HasseNode NewNode(string s, HasseNode.HasseNodeTypes e, string debugInfo)
         {
-            //if (s.Contains("xyz")) System.Diagnostics.Debugger.Break();   
 
             switch (nType)
             {
@@ -43,7 +42,6 @@ namespace HasseManager
 
         public HasseNode NewNode(object  o, HasseNode.HasseNodeTypes e, string debugInfo)
         {
-            //if (s.Contains("xyz")) System.Diagnostics.Debugger.Break();   
 
             switch (nType)
             {
@@ -58,7 +56,5 @@ namespace HasseManager
             }
 
         }
-
-
     }
 }

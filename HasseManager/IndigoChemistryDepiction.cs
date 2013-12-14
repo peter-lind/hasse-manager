@@ -10,7 +10,6 @@ namespace HasseManager
     {
         IndigoRenderer renderer;
         Indigo indigo;
-
         public IndigoChemistryDepiction(Indigo _indigo)
         {
             indigo = _indigo;
@@ -45,11 +44,9 @@ namespace HasseManager
             indigo.setOption("render-comment-font-size", "15");
             indigo.setOption("render-comment-offset", "6");
             mol.layout();
-            //indigo.setOption("render-comment", "N-Hydroxyaniline")
             renderer.renderToFile(mol, fname);
 
             //indigo.setOption("render-output-format", "svg");
-            //byte[] svg = renderer.renderToBuffer(rxn);
         }
     }
 }

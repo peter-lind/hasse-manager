@@ -51,15 +51,6 @@ namespace HasseManager
             int countAllLeaves = 0;
             HasseNodeCollection NodesOnThisLevel = new HasseNodeCollection();
             NodesOnThisLevel.Add(rootNode.KeyString , rootNode); 
-            //foreach (HasseNode rootnode in nodes.Values)
-            //{
-            //    if ((rootnode.NodeType & HasseNode.HasseNodeTypes.ELEMENT)>0)
-            //    {
-            //        NodesOnThisLevel.Add(rootnode.KeyString, rootnode);
-            //    }
-            //}
-            //sb.AppendLine("Element type nodes:    \t" + NodesOnThisLevel.Count.ToString());
-
 
             HasseNodeCollection NodesOnThisLevelPlusOne = new HasseNodeCollection();
 
@@ -70,7 +61,6 @@ namespace HasseManager
                 foreach (HasseNode node in NodesOnThisLevel.Values)
                 {
                     node.LevelFromRoot = level;
-                    //sb.AppendLine(node.KeyString  + " "); 
                     foreach (HasseEdge EdgeUpToParent in node.EdgesToCovering )
                     {
                         HasseNode Parent = EdgeUpToParent.UpperNode;
@@ -94,9 +84,6 @@ namespace HasseManager
             sb.AppendLine("total node count: " + nodes.Count.ToString());
             sb.AppendLine("total leaves count: " + countAllLeaves.ToString());
 
-
-            //double selectivity = 0;
-          //  selectivity = (((double)sumCovering / (double)sumRootNodes) / (double)sumNonRootNodes);
             return sb.ToString ();
         }
     }
