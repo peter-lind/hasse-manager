@@ -96,7 +96,6 @@ namespace HasseManager
             DotFile.WriteLine("nodesep=0.1;");
             //DotFile.Write(@"imagepath=C:\temp\");
 
-
             if (false)
             {
                 //for twopi:

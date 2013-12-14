@@ -228,7 +228,6 @@ namespace HasseManager
             d = D_ALA.GetDifferenceString(L_ALA);
 */
 
-
             HasseDiagram HDM = new HasseDiagram(HasseNodeFactory.NodeType.CHEM);
             HasseNodeCollection elements = new HasseNodeCollection();
 

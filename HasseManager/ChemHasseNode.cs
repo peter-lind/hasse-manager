@@ -8,7 +8,6 @@ namespace HasseManager
 {
     public class ChemHasseNode : HasseNode
     {
-
         const int MAX_SCAFFOLDS = 2;
         const string MCS_MODE = "exact 100000";
         public const string  SUBSTRUCTURE_MATCH_PARAM = "";

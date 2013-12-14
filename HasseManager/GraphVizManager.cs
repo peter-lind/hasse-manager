@@ -6,6 +6,7 @@ using System.Diagnostics;
 
 namespace HasseManager
 {
+
     class GraphVizManager
     {
         public static void RunDot(string infile, string outfile,string extension)

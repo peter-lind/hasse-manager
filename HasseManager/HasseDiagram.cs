@@ -65,7 +65,6 @@ namespace HasseManager
         public const int MINIMUM_FRAGMENT_SIZE = 1;
         // ==========================================
 
-
         public HasseDiagram(HasseNodeFactory.NodeType t )
         {
           // construct new HasseDiagram  
