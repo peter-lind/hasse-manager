@@ -49,6 +49,7 @@ namespace HasseManager
         public const int LOG_ALL_COMPARISON_COUNTS = 16;
         public const int LOG_DEBUG_ALL = 1 + 2 + 4 + 8;
         public const int LOG_ALL_TIMINGS = 32;
+        public const int DEBUG_MCS = 64;
 
         public const int CHECK_NOTHING = 0;
         public const int CHECK_LUB_AND_GLB = 1;
@@ -57,12 +58,13 @@ namespace HasseManager
 
         // ==========================================
         // edit those settings
-        public bool USE_ELEMENTS = false;
-        public const int DEBUGLEVEL = 0;//4 + 8;
-        public const int CHECK_LEVEL = CHECK_NOTHING;
+       // public bool USE_ELEMENTS = false;
+       // public const int DEBUGLEVEL = LOG_DEBUG_ALL;//0;//4 + 8;
+        public const int DEBUGLEVEL = 0;
+        public const int CHECK_LEVEL = 1;//CHECK_NOTHING;
         public bool MAKE_MCS_AT_ONCE = true;
         public bool LABEL_EDGES_WITH_DIFFERENCE = true;
-        public const int MINIMUM_FRAGMENT_SIZE = 1;
+        public const int MINIMUM_FRAGMENT_SIZE = 4;
         // ==========================================
 
 
@@ -71,11 +73,11 @@ namespace HasseManager
           // construct new HasseDiagram  
             HasseDiagramNodes = new HasseNodeCollection();  //collection nodes in diagram
             DifferenceNodes = new HasseNodeCollection();    //collection of objects expressing difference
-            ElementaryHasseNodes = new HasseNodeCollection(); // collection of elements
+            //ElementaryHasseNodes = new HasseNodeCollection(); // collection of elements
 
             // factory for nodes, set its nodetype and let it have access to global elements collection
-            diagramNodeFactory = new HasseNodeFactory(t,ElementaryHasseNodes );
-            differenceNodeFactory = new HasseNodeFactory(t, DifferenceNodes);
+            diagramNodeFactory = new HasseNodeFactory(t);
+            differenceNodeFactory = new HasseNodeFactory(t);
 
             // a queue for nodes to be created after current node is fully processed
             FragmentInsertionQueue = new HasseFragmentInsertionQueue(HasseDiagramNodes);
@@ -84,8 +86,6 @@ namespace HasseManager
             RootNode = diagramNodeFactory.NewNode("", HasseNode.HasseNodeTypes.ROOT,"");
             HasseDiagramNodes.Add("{}", RootNode);
         }
-
-
                             void InsertFragmentsInQueue()
             {
                             while (FragmentInsertionQueue.Count > 0)
@@ -248,29 +248,13 @@ namespace HasseManager
         }
         public HasseNode CreateNewNode(string NodeContentString)
         {
-            try
-            {
                 HasseNode newNode = this.diagramNodeFactory.NewNode(NodeContentString, HasseNode.HasseNodeTypes.REAL, "");
                 return newNode;
-            }
-            catch (Exception ex)    
-                {
-                System.Diagnostics.Debug.WriteLine("Warrning: CreateNewNode failed: " + ex.ToString ());
-                return null;
-                }
         }
         public HasseNode CreateNewNode(object o )
         {
-            try
-            {
                 HasseNode newNode = this.diagramNodeFactory.NewNode(o, HasseNode.HasseNodeTypes.REAL, "");
                 return newNode;
-            }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine("Warrning: CreateNewNode failed: " + ex.ToString ());
-                return null;
-            }
         }
 
         public HasseNode AddNode(HasseNode newNode)
@@ -309,12 +293,12 @@ namespace HasseManager
                 if(newNode.HasNodeType ( HasseNode.HasseNodeTypes.REAL )){
                     string n = newNode.GetName(); 
                     HasseDiagramNodes[newNode.KeyString].SetName(n);
-                    if (CREATE_NODE_IMAGE) HasseDiagramNodes[newNode.KeyString].CreateImage();
+                    //if (CREATE_NODE_IMAGE) HasseDiagramNodes[newNode.KeyString].CreateImage();
                 System.Diagnostics.Debug.WriteLineIf(debug, " Skipping add of " + newNode.KeyString);
                 }
                 return false; 
             }
-            if (CREATE_NODE_IMAGE) newNode.CreateImage();
+            //if (CREATE_NODE_IMAGE) newNode.CreateImage();
             CountAdditions += 1;
             
             if (DEBUGLEVEL > 0)
@@ -322,9 +306,10 @@ namespace HasseManager
                 System.Diagnostics.Debug.WriteLine("Add Node " + newNode.KeyString + " " + CountAdditions.ToString());
             }
 
-
+            
                 // loop elements of new object         
-                foreach (HasseNode Element in newNode.getElementarySubobjects().Values)
+           /*
+            foreach (HasseNode Element in newNode.getElementarySubobjects().Values)
                 {
                     if (USE_ELEMENTS)
                     {
@@ -340,7 +325,7 @@ namespace HasseManager
                     if (!ElementaryHasseNodes.ContainsKey(Element.KeyString))
                         ElementaryHasseNodes.Add(Element.KeyString, Element);
                 }
-            
+            */
 
 
             System.Diagnostics.Debug.WriteLineIf(dbgTimings, " ticks add 1 (init) " + sw.ElapsedTicks.ToString());
@@ -373,21 +358,12 @@ namespace HasseManager
             if (Convert.ToBoolean(CHECK_LEVEL & CHECK_ALL))
                 newNode.validate();
 
-
             if (MAKE_MCS_AT_ONCE) { FindCommonFragments(newNode); }
 
 
             System.Diagnostics.Debug.WriteLineIf(dbgTimings, " ticks 4 (made MCS)" + sw.ElapsedTicks.ToString());
-            //start search upward from elementary subobjects of new object
-            if (Convert.ToBoolean(CHECK_LEVEL & CHECK_ALL))
-            {
-                foreach (HasseNode Node in newNode.getElementarySubobjects().Values)
-                {
-                    Node.validate();
-                }
-            }
             // The node may be there already, just added, as element if it is both element and real
-            if (!newNode.HasNodeType(HasseNode.HasseNodeTypes.ELEMENT))
+           // if (!newNode.HasNodeType(HasseNode.HasseNodeTypes.ELEMENT))
                 HasseDiagramNodes.Add(newNode.KeyString, newNode);
             return true;
         }
@@ -502,7 +478,7 @@ namespace HasseManager
             // analyse difference between smaller and larger.
             // output can be the *-marked smaller node + all difference fragments
             // or can be partial 
-            if ((LABEL_EDGES_WITH_DIFFERENCE) && (N1 != RootNode) && (N1.NodeType !=  HasseNode.HasseNodeTypes.ELEMENT)  )
+            if ((LABEL_EDGES_WITH_DIFFERENCE) && (N1 != RootNode)   )
             {
                 string[] EdgeLabels = N1.GetDifferenceString(N2);
                 E.LabelText = String.Join(", ", EdgeLabels);
@@ -687,13 +663,14 @@ namespace HasseManager
         {
             bool dbg = Convert.ToBoolean(DEBUGLEVEL & LOG_DEBUG_MAKE_GLB);
             HasseNodeCollection glb = new HasseNodeCollection();
-            List<string> ToBeRemoved = new List<string>();
+            //List<string> ToBeRemoved = new List<string>();
+            HashSet<string> ToBeRemoved = new HashSet<string>();
             foreach (HasseNode Node in AllNodes.Values)
             {
                 if (!ToBeRemoved.Contains(Node.KeyString))
                 {
                     System.Diagnostics.Debug.WriteLineIf(dbg, "test if " + ReferenceNode.KeyString + " is larger than " + Node.KeyString);
-                    if (ReferenceNode.HasElements(Node.getElementarySubobjects().Values.ToArray()) && ReferenceNode.IsLargerThan(Node))
+                    if ( ReferenceNode.IsLargerThan(Node))
                     {
                         System.Diagnostics.Debug.WriteLineIf(dbg, " yes - is glb candidate, delete below...");
                         glb.Add(Node.KeyString, Node);
@@ -722,7 +699,8 @@ namespace HasseManager
         {
             bool dbg = Convert.ToBoolean(DEBUGLEVEL & LOG_DEBUG_MAKE_LUB);
             HasseNodeCollection lub = new HasseNodeCollection();
-            List<string> ToBeRemoved = new List<string>();
+            //List<string> ToBeRemoved = new List<string>();
+            HashSet<string> ToBeRemoved = new HashSet<string>();
             foreach (HasseNode Node in AllNodes.Values)
             {
                 if (!ToBeRemoved.Contains(Node.KeyString))
@@ -739,7 +717,7 @@ namespace HasseManager
                     //}
 
 
-                    if (Node.HasElements(ReferenceNode.getElementarySubobjects().Values.ToArray()) && Node.IsLargerThan(ReferenceNode))
+                    if ( Node.IsLargerThan(ReferenceNode))
                     {
                         System.Diagnostics.Debug.WriteLineIf(dbg, " yes - is lub candidate, delete above...");
                         lub.Add(Node.KeyString, Node);
@@ -764,7 +742,7 @@ namespace HasseManager
             return (lub);
         }
 
-        private static void FindNodesAbove(HasseNode Node, List<string> NodeKeys, int level)
+        private static void FindNodesAbove(HasseNode Node, HashSet<string> NodeKeys, int level)
         {
             foreach (HasseEdge EdgeToCovering in Node.EdgesToCovering)
             {
@@ -774,7 +752,7 @@ namespace HasseManager
             if (level > 0) NodeKeys.Add(Node.KeyString);
         }
 
-        private static void FindNodesBelow(HasseNode Node, List<string> NodeKeys, int level)
+        private static void FindNodesBelow(HasseNode Node, HashSet<string> NodeKeys, int level)
         {
             foreach (HasseEdge E in Node.EdgesToCovered)
             {
@@ -788,14 +766,10 @@ namespace HasseManager
         public void FindCommonFragments(HasseNode newNode)
         {
             bool CompareToAll = false;
+            bool CompareToSiblings = false;
             if (newNode.NodeType == HasseNode.HasseNodeTypes.ROOT) return;  
-            // todo - should be the 'extra' compared to the covered
-            // todo - can only new on top nodes have new MCS?
 
-            
-            // look at difference of new node relative to those covered
-            // which part(s) of this new structure is/are not already processed ?
-            // make list of nodes describing the 'added' part
+            /*
             List<HasseNode> DifferenceNodes = new List<HasseNode>();
             foreach (HasseEdge E in newNode.EdgesToCovered)
             {
@@ -804,21 +778,29 @@ namespace HasseManager
                     DifferenceNodes.Add(N); 
                 }
             }
+            */
+            if (newNode.IsLeafNode())
+            {
+                CompareToAll = true;
 
-            CompareToAll = true ; ///////////////////////////////////////////////////7
+            }
+            else
+            {
+                CompareToSiblings = true; 
+            }
+            //CompareToAll = true;
 
-
-            List<HasseNode> ElementList = new List<HasseNode>();
-
+            /*
             if (DifferenceNodes.Count() == 0)
             {
                 CompareToAll = true;
-                System.Diagnostics.Debug.WriteLine("Zero differencenodes! "  );
-                //System.Diagnostics.Debugger.Break();   
+                System.Diagnostics.Debug.WriteLine("Zero differencenodes! ");
             }
-            
-            HasseNode[] Elements = ElementList.ToArray(); 
-            //HasseNode[] Elements = newNode.getElementarySubobjects().Values.ToArray();
+            else
+            {
+                System.Diagnostics.Debug.WriteLine( DifferenceNodes.Count().ToString () + " differencenodes ");
+            }
+            */
 
             List<HasseNode> MCSPartners = new List<HasseNode>();
 
@@ -827,8 +809,6 @@ namespace HasseManager
             //foreach (HasseNode N in HasseDiagramNodes.NodesWithOneOfElements(Elements))
             foreach (HasseNode N in HasseDiagramNodes.Values )
             {
-                if (N.NodeType != HasseNode.HasseNodeTypes.ELEMENT)
-                {
                     if (N.NodeType != HasseNode.HasseNodeTypes.ROOT  )
                     {
 //                        System.Diagnostics.Debug.WriteLine("each N " + ((ChemHasseNode)N).Molecule().smiles());
@@ -837,41 +817,35 @@ namespace HasseManager
                             MCSPartners.Add(N);
                             continue;
                         }
-                        foreach (HasseNode newDiff in DifferenceNodes)
-                        {
-                            if (N.BitArrayFingerPrint.ContainsAllBitsOf(newDiff.BitArrayFingerPrint))
-                            {
-                                MCSPartners.Add(N);
-                                continue;
-                            }
-                        }
                     }
-                }
             }
 
+            if (CompareToSiblings)
+            {
+                foreach (HasseNode N in newNode.GetSiblings())
+                {
+                    if (!MCSPartners.Contains(N))
+                        MCSPartners.Add(N);
+                }
+
+            }
             float selectivity = (float)MCSPartners.Count / (float)HasseDiagramNodes.Count;
            // if (selectivity < 0.01) System.Diagnostics.Debugger.Break();   
            // System.Diagnostics.Debug.WriteLine(selectivity);     
 
-            /*
-            foreach (HasseNode N in newNode.GetSiblings())
-            {
-                if (!MCSPartners.Contains (N)) 
-                MCSPartners.Add(N);
-            }
-            */
+            
+            
+
             foreach (HasseNode N in MCSPartners)
             {
-                //foreach (HasseNode Elm in Elements)
-                //{
  
                 System.Diagnostics.Stopwatch sw = new Stopwatch() ;
                 sw.Start();
-                    bool FoundMCS = newNode.GetMaxCommonFragments(newNode, N, false, FragmentInsertionQueue,  MINIMUM_FRAGMENT_SIZE);
+                bool debugMCS = Convert.ToBoolean(DEBUGLEVEL & DEBUG_MCS );
+                bool FoundMCS = newNode.GetMaxCommonFragments(newNode, N, debugMCS, FragmentInsertionQueue, MINIMUM_FRAGMENT_SIZE);
+                  
                     long elapsed = sw.ElapsedMilliseconds;
-                if (elapsed > 5000) System.Diagnostics.Debugger.Break();   
-                
-                
+                if (elapsed > 5000) System.Diagnostics.Debugger.Break();                   
             }
 
         }

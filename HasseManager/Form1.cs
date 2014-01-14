@@ -45,15 +45,27 @@ namespace HasseManager
             openFileDialog1.DefaultExt= ".txt";
             if (openFileDialog1.ShowDialog() == System.Windows.Forms.DialogResult.OK)
             {
-                Tester.test4(openFileDialog1.FileName);
-                
+                Tester.test4(openFileDialog1.FileName); 
             }
 
         }
 
         private void button1_Click(object sender, EventArgs e)
         {
-            GraphVizManager.RunDot (@"c:\temp\testdotfile.dot" ,@"c:\temp\graph","svg" );
+            string infile = @"c:\temp\testdotfile.dot";
+            string outfile = @"c:\temp\graph";
+            string extension ="svg";
+            string errmsg=GraphVizManager.RunDot ( infile,outfile,extension );
+            string msg = "";
+            if (errmsg== "")
+            {
+                msg = "Success. Input file: " + infile + ", output file: " + outfile + "." + extension;
+            }
+            else
+            {
+                msg = errmsg;
+            }
+            System.Windows.Forms.MessageBox.Show(msg, "", MessageBoxButtons.OK);
         }
 
         private void button2_Click(object sender, EventArgs e)

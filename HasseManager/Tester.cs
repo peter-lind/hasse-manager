@@ -25,6 +25,15 @@ using com.ggasoftware.indigo;
 
 namespace HasseManager
 {
+    class StringHashComparer : IComparer<string>
+    {
+        int IComparer<string>.Compare(string x, string y)
+        {
+            if (x.GetHashCode()  < y.GetHashCode()) return -1; else return 1;
+        }
+    }
+
+
     class Tester
     {
         public void test3()
@@ -32,12 +41,12 @@ namespace HasseManager
 //            Type type = Type.GetType("StringHasseNode");
             HasseDiagram HDM = new HasseDiagram(HasseNodeFactory.NodeType.STRING);
             System.Random rnd = new System.Random(1);
-            HasseNodeCollection Elements1 = new HasseNodeCollection();
-            HasseNodeCollection elements = new HasseNodeCollection();
+            //HasseNodeCollection Elements1 = new HasseNodeCollection();
+            //HasseNodeCollection elements = new HasseNodeCollection();
 
 
-            StringHasseNode Node1 = new StringHasseNode("CA*", HasseNode.HasseNodeTypes.REAL, Elements1,"");
-            StringHasseNode Node2 = new StringHasseNode("DCCCA*", HasseNode.HasseNodeTypes.REAL, Elements1,"");
+            StringHasseNode Node1 = new StringHasseNode("CA*", HasseNode.HasseNodeTypes.REAL, "");
+            StringHasseNode Node2 = new StringHasseNode("DCCCA*", HasseNode.HasseNodeTypes.REAL, "");
 
 
             bool test = Node2.IsLargerThan(Node1);
@@ -89,7 +98,7 @@ namespace HasseManager
             System.IO.FileStream fs = new System.IO.FileStream(filename, System.IO.FileMode.Open, System.IO.FileAccess.Read);
 
             System.IO.TextReader rdr = new System.IO.StreamReader(fs);
-            int maxCount = 1000;
+            int maxCount = 2000;
             int count = 0;
 
             List<string> Words = new List<string>();
@@ -97,8 +106,7 @@ namespace HasseManager
 
             do
             {
-                if (count >= maxCount)
-                    break;
+                //if (count >= maxCount)   break;
 
                 char[] delim = { ' ', ',', '.' };
                 string line = rdr.ReadLine();
@@ -111,6 +119,7 @@ namespace HasseManager
                     string w = words[i];
                     w = w.Trim();
                     w = w.ToLower();
+                    w = w.Replace("*", "");
                     w = w.Replace("(", "");
                     w = w.Replace(")", "");
                     w = w.Replace("]", "");
@@ -122,18 +131,30 @@ namespace HasseManager
                     {
                         Words.Add(w); // Add to list for insertion below
                     }
-                    if (count >= maxCount)
-                        break;
 
                 }
 
             } while (true);
 
-            Words.Sort();
+            // 'randomise' order
+           StringHashComparer shc = new StringHashComparer();
+           Words.Sort(shc);
 
+            //65533
+           count = 0;
             foreach (string Word in Words)
             {
+                count += 1;
+
+                System.Diagnostics.Debug.WriteLine(Word);  
+                foreach (char c in Word.ToCharArray())
+                {
+                //    System.Diagnostics.Debug.WriteLine(((int)c).ToString ());
+                }
+
                 HDM.AddNode(Word);
+                if (count >= maxCount)
+                    break;
             }
 
             fs.Close();
@@ -147,10 +168,11 @@ namespace HasseManager
             HDM.HasseDiagramNodes.Sort();
             foreach (HasseNode n in HDM.HasseDiagramNodes.Values)
             {
-                //     System.Diagnostics.Debug.WriteLine (n.KeyString);  
+                    System.Diagnostics.Debug.WriteLine (n.KeyString);  
             }
 
             DotFileWriter DW = new DotFileWriter(HDM.HasseDiagramNodes, "C:\\temp\\testdotfile.dot");
+            DW.LabelMode = labelMode.USE_NODE_KEY;
             DW.WriteDotFile();
             System.Diagnostics.Debug.WriteLine(HDM.RootNode.HashString());
             System.Diagnostics.Debug.WriteLine(HDM.HasseDiagramNodes.Count.ToString() + " Diagram objects");
@@ -217,13 +239,18 @@ namespace HasseManager
             d=L_ALA.GetDifferenceString (D_ALA);
             d = D_ALA.GetDifferenceString(L_ALA);
 */
-
-            HasseDiagram HDM = new HasseDiagram(HasseNodeFactory.NodeType.CHEM);
+//            HasseDiagram HDM = new HasseDiagram(HasseNodeFactory.NodeType.CHEM );
+            HasseDiagram HDM = new HasseDiagram(HasseNodeFactory.NodeType.FINGERPRINTCHEM );
             HasseNodeCollection elements = new HasseNodeCollection();
 
             //ChemHasseNode A = (ChemHasseNode)HDM.AddNode("c1ccccccc[nH]1"); // azonine
             //ChemHasseNode B = (ChemHasseNode)HDM.AddNode("C12=C(C=NC=C1)NC1=C2C=CC=C1");  // pyrido indol
             //ChemHasseNode C = (ChemHasseNode)HDM.AddNode("c1cccc2[nH]ccc21"); // indol
+
+            //FingerprintChemHasseNode A = (FingerprintChemHasseNode)HDM.AddNode("C"); // 
+            //FingerprintChemHasseNode B = (FingerprintChemHasseNode)HDM.AddNode("CC");  // 
+            //FingerprintChemHasseNode C = (FingerprintChemHasseNode)HDM.AddNode("CN"); // 
+
 
            // ChemHasseNode A = (ChemHasseNode)HDM.AddNode(@"[NH3+]C");
             //ChemHasseNode B = (ChemHasseNode)HDM.AddNode(@"[NH2]CC");
@@ -249,14 +276,13 @@ namespace HasseManager
             // foreach (IndigoObject item in indigo.iterateSDFile(@"C:\HassePub\Datasets\chembl_pyridines.sdf"))
             //foreach (IndigoObject item in indigo.iterateSDFile(@"C:\HassePub\Datasets\ChEBI_anilines_480-500.sdf"))
             //foreach (IndigoObject item in indigo.iterateSDFile(@"C:\HassePub\Datasets\ChEBI_valines.sdf"))
-            foreach (IndigoObject item in indigo.iterateSDFile(@"C:\HassePub\Datasets\ChEBI_valines_v21.sdf"))
+            foreach (IndigoObject item in indigo.iterateSDFile(@"C:\HassePub\Datasets\ChEBI_valines_v21.sdf")) // in pub
             {
               
-                if (item.isChiral() == false) continue;
+               if (item.isChiral() == false) continue;
                 count++;
                     //System.Diagnostics.Debugger.Break();   
-                if (count >24) break; //28
-                //if (count % 2 == 0)
+                if (count >24) break; //24 for valines in pub
 
        //         HasseNode N = HDM.CreateNewNode(item);
                 //if (N.IsValid())
@@ -312,17 +338,20 @@ namespace HasseManager
             DotFileWriter DW = new DotFileWriter(HDM.HasseDiagramNodes, "C:\\temp\\testdotfile.dot");
 
             int cnt = 0;
+            
+            
             foreach (HasseNode N in HDM.HasseDiagramNodes.Values)
             {
-               
-                if (N.NodeType != HasseNode.HasseNodeTypes.ROOT)
+
+                if ((N.GetType() == typeof(ChemHasseNode) || N.GetType() == typeof(FingerprintChemHasseNode )) && N.NodeType != HasseNode.HasseNodeTypes.ROOT)
                 {
                     cnt++;
                     N.SetName(cnt.ToString());
-                    N.CreateImage();
+                   if (N.GetType() == typeof(ChemHasseNode))  ((ChemHasseNode ) N).CreateImage();
+                   if (N.GetType() == typeof(FingerprintChemHasseNode)) ((FingerprintChemHasseNode)N).CreateImage();
                 }
             }
-
+            
             DW.SetLabelsToNumericSequence();
             DW.SetDrawingColors();
             DW.LabelMode = labelMode.NO_LABELS; // for figure 5
@@ -333,19 +362,21 @@ namespace HasseManager
             
             DW.UseImage = true; 
             DW.WriteEdgeLabels = false;
-            //DW.FilterMaxLevelFromRoot = 4;
-            DW.WriteDotFile();
 
             sw.Stop();
             System.Diagnostics.Debug.WriteLine(sw.ElapsedMilliseconds.ToString());
+
+            DW.WriteDotFile();
+
             System.Diagnostics.Debug.WriteLine("Nodes: " + HDM.HasseDiagramNodes.Count());
             System.Diagnostics.Debug.WriteLine("Diffs: " + HDM.DifferenceNodes.Count());
             System.Diagnostics.Debug.WriteLine("Hash: " + HDM.RootNode.HashString());
 
             foreach (HasseNode N in HDM.HasseDiagramNodes.Values )
             {
-                if (N.HasNodeType (HasseNode.HasseNodeTypes.FRAGMENT ))  
-                System.Diagnostics.Debug.WriteLine(N.KeyString + " " + N.Weight().ToString() );   
+                if (N.HasNodeType(HasseNode.HasseNodeTypes.FRAGMENT))
+                    ;
+              //  System.Diagnostics.Debug.WriteLine(N.KeyString + " " + N.Weight().ToString() );   
             }
              System.Diagnostics.Debug.WriteLine (     HasseDiagramStats.Report(HDM.HasseDiagramNodes, HDM.RootNode )); 
         }

@@ -9,7 +9,7 @@ namespace HasseManager
 
     class GraphVizManager
     {
-        public static void RunDot(string infile, string outfile,string extension)
+        public static string RunDot(string infile, string outfile,string extension)
         {
             extension = extension.ToLower (); 
             switch (extension)
@@ -39,6 +39,7 @@ namespace HasseManager
 
             process.WaitForExit();
             string error = process.StandardError.ReadToEnd();
+            return error;
         }
     }
 }

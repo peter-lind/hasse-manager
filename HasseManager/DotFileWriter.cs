@@ -112,7 +112,7 @@ namespace HasseManager
 
         private void WriteNode(HasseNode N)
         {
-            System.Diagnostics.Debug.WriteLine(((ChemHasseNode)N).GetName());
+            //System.Diagnostics.Debug.WriteLine(((ChemHasseNode)N).GetName());
             //DotFile.WriteLine("node[shape = rounded];"); 
             DotFile.Write(DoubleQuoted(N.KeyString));
             DotFile.Write(" ["); // start node attributes
@@ -149,7 +149,7 @@ namespace HasseManager
                     throw new Exception("unhandled labelmode");
             }
 
-            DotFile.Write(" color=" + N.DrawingColor + " ");
+            if (N.DrawingColor!="" ) DotFile.Write(" color=" + N.DrawingColor + " ");
 
             if (UseImage && N.ImageFileName.Length > 0)
             {
@@ -182,7 +182,7 @@ namespace HasseManager
             DotFile.Write(DoubleQuoted(Node1.KeyString));  // node 1 key
 
             DotFile.Write("[dir=back ");
-            DotFile.Write(" color=" + Node1.DrawingColor + " ");
+            if (Node1.DrawingColor != "") DotFile.Write(" color=" + Node1.DrawingColor + " ");
             DotFile.Write(" shape=vee ");
             if (this.WriteEdgeLabels)
             {

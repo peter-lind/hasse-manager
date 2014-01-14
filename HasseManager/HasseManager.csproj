@@ -82,6 +82,7 @@
   <ItemGroup>
     <Compile Include="ChemHasseNode.cs" />
     <Compile Include="DotFileWriter.cs" />
+    <Compile Include="FingerprintChemHasseNode.cs" />
     <Compile Include="Form1.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -92,11 +93,13 @@
     <Compile Include="HasseDiagram.cs" />
     <Compile Include="HasseDiagramStats.cs" />
     <Compile Include="HasseEdge.cs" />
+    <Compile Include="HasseFingerprints.cs" />
     <Compile Include="HasseFragmentInsertionList.cs" />
     <Compile Include="HasseNode.cs" />
     <Compile Include="HasseNodeFactory.cs" />
     <Compile Include="HasseValidation.cs" />
     <Compile Include="HasseNodeCollection.cs" />
+    <Compile Include="IndigoChemistry.cs" />
     <Compile Include="IndigoChemistryDepiction.cs" />
     <Compile Include="IndigoTests.cs" />
     <Compile Include="Program.cs" />
@@ -125,6 +128,7 @@
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
     </Compile>
     <Compile Include="StringHasseNode.cs" />
+    <Compile Include="StringMatcher.cs" />
     <Compile Include="Tester.cs" />
     <Compile Include="TopologicalSort.cs" />
   </ItemGroup>

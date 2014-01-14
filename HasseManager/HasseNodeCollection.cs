@@ -52,6 +52,7 @@ namespace HasseManager
             get { return (HasseNodeCollection)this.MemberwiseClone(); }
         }
 
+        /*
         public List<HasseNode> NodesHavingElements(HasseNode[] Elements)
         {
             // TODO sort elements with least common first
@@ -64,8 +65,9 @@ namespace HasseManager
             }
             return L; 
         }
+        */
 
-
+        /*
         public List<HasseNode> NodesWithOneOfElements(HasseNode[] Elements)
         {
             // must test all of elements before give up
@@ -80,6 +82,8 @@ namespace HasseManager
             }
             return L;
         }
+
+        */
         public HasseNode NodeWithName(string name)
         {
             foreach (HasseNode N in this.Values)

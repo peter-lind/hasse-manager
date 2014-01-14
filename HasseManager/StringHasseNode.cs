@@ -47,8 +47,8 @@ namespace HasseManager
 
 
 
-        public StringHasseNode(string s, HasseNodeTypes ElementType, HasseNodeCollection globalElementCollection, string debugInfo)
-            : base(ElementType, globalElementCollection , debugInfo)
+        public StringHasseNode(string s, HasseNodeTypes ElementType, string debugInfo)
+            : base(ElementType, debugInfo)
         {
 
             // TODO remove this check
@@ -59,22 +59,12 @@ namespace HasseManager
                 throw new Exception("new empty string");
             Debug.WriteLineIf(DEBUG_NEW, "                                          created  " + s);
 
+            // todo remove one of below
             str = s;
+            keystring = s;
             base.size = s.Length; 
         }
-        public override void CreateImage()
-        {
-             // no image for this
-            throw new NotImplementedException();
-        }
-        public override void CreateImage(float weight)
-        {
-            throw new NotImplementedException();
-        }
-        public override int elementCount()
-        {
-             return getElementarySubobjects().Count; 
-        }
+
 
         private int GetNextMatch(int StartFrom,string SearchFor, string SearchIn)
         {
@@ -82,13 +72,13 @@ namespace HasseManager
            return HitPosition;
         }
 
-        public override bool GetMaxCommonFragments(HasseNode Node1, HasseNode Node2, bool dbg,
+        public  bool GetMaxCommonFragmentsNotUsed(HasseNode Node1, HasseNode Node2, bool dbg,
             HasseFragmentInsertionQueue NewFragmentList, int MinimumOverlap)
         {
             
             // this Node is directly below both Node1 and Node2
             // it can match several places
-            CountMCS++;    
+            CountMCS ++;    
             string strSeed = this.KeyString.Replace("*", "");
             string str1 = Node1.KeyString;
             string str2 = Node2.KeyString;
@@ -115,8 +105,31 @@ namespace HasseManager
            
             return FoundMCS;
         }
+        public override bool GetMaxCommonFragments(HasseNode Node1, HasseNode Node2, bool dbg,
+            HasseFragmentInsertionQueue NewFragmentList, int MinimumOverlap)
+        {
+            CountMCS++;
+            string str1 = Node1.KeyString;
+            string str2 = Node2.KeyString;
+            bool FoundMCS = false;
 
+            StringMatcher sm = new StringMatcher();
+            sm.Initialise(str1, str2);
+            Match m = null;
+            do
+            {      
+                m = sm.nextMatch();
+                if (m == null) break;
+                if (m.LastPosInA - m.FirstPosInA < MinimumOverlap-1) continue;
+                //System.Diagnostics.Debug.WriteLine(m.StrA.Substring(m.FirstPosInA, m.LastPosInA - m.FirstPosInA + 1));
+                //System.Diagnostics.Debug.WriteLine(m.StrB.Substring(m.FirstPosInB, m.LastPosInB - m.FirstPosInB + 1));
+                string debugInfo = "MCS " + Node1.GetID().ToString() + " " + Node2.GetID().ToString();
+                if (true == ProcessMatch(m, MinimumOverlap, NewFragmentList, new HasseNode[2] { Node1, Node2 }, debugInfo))
+                { FoundMCS = true; }
 
+            } while (true);
+            return FoundMCS;
+        }
 
         private bool ProcessMatch(Match M, int MinimumOverlap, HasseFragmentInsertionQueue NewFragmentList ,HasseNode [] PartlyMatchingNodes, string debugInfo)
             {
@@ -124,13 +137,15 @@ namespace HasseManager
             bool matchWasNew = false;          
             if (StringMCS.Length >= MinimumOverlap)
             {
+              //  if (M.StrA.Equals("*t")) System.Diagnostics.Debugger.Break(); 
+
                 // deal with the max common substructure:
                 // star to left? Both strings must then have one pos matching star
                 if (M.FirstPosInA  > 0 && M.FirstPosInB  > 0)
                 { StringMCS = "*" + StringMCS; }
                 // star to right? Both strings must then have one pos matching star
                 if ((M.LastPosInA < M.StrA.Length - 1) && (M.LastPosInB < M.StrB.Length - 1))
-                {
+                {                   
                     StringMCS = StringMCS + "*";
                 }
 
@@ -139,17 +154,18 @@ namespace HasseManager
                 {
                     return false;
                 }
- 
-                if (StringMCS.Equals("~~~~")) { System.Diagnostics.Debugger.Break(); } // TODO remove
-                if (true == NewFragmentList.Add(new HasseNode[1] { this }, PartlyMatchingNodes,
-                    StringMCS, debugInfo ,
-                    HasseNodeTypes.FRAGMENT | HasseNodeTypes.MAX_COMMON_FRAGMENT, null))
-                    matchWasNew = true;
+                if (StringMCS.Equals("**")) System.Diagnostics.Debugger.Break();   
+                if (!StringMCS.Equals("*"))
+                {
+                    if (true == NewFragmentList.Add(new HasseNode[1] { this }, PartlyMatchingNodes,
+                        StringMCS, debugInfo,
+                        HasseNodeTypes.FRAGMENT | HasseNodeTypes.MAX_COMMON_FRAGMENT, null))
+                        matchWasNew = true;
+                }
             }
             //if (matchWasNew) { System.Diagnostics.Debugger.Break(); }
             return matchWasNew;
         }
-
 
         public override string[] GetDifferenceString(HasseNode LargerNode){
             List<string> DiffList = new List<string>() ;
@@ -179,73 +195,6 @@ namespace HasseManager
             string[] s = DiffList.ToArray();
             return s;
         }
-
-
-
-
-
-
-
-
-        /*
-        public override bool IsIdenticalTo(HasseNode Node)
-        {
-            if (this.str.Equals(Node.KeyString))
-            {
-                return true;
-            }
-            else
-            {
-                return false;
-            }
-        }
-        */
-
-        protected override Dictionary<string, HasseNode> makeElementarySubobjects(HasseNodeCollection GlobalHasseNodeCollection)
-        {
-            //watch out for infinite recursion as we are called from New and also may call New
-
-            Dictionary<string, HasseNode> elmobjects = new Dictionary<string, HasseNode>();
-            if (this.NodeType == HasseNodeTypes.ROOT) return (elmobjects);
-
-
-            //int i = 0;
-            string str2 = str.Replace("*", "");
-            for (int i = 0; i <= str2.Length - 1; i++)
-            {
-                string buf = str2.Substring(i, 1);
-
-                //get existing reference to this elm or create new if not exist 
-                StringHasseNode element = null;
-                if (GlobalHasseNodeCollection.ContainsKey(buf))
-                {
-                    element = (StringHasseNode)GlobalHasseNodeCollection[buf];
-                }
-                else
-                {
-                    element = new StringHasseNode(buf, HasseNodeTypes.ELEMENT, GlobalHasseNodeCollection, "from " + this.ID.ToString () );
-                    GlobalHasseNodeCollection.Add(buf, element);
-                }
-
-                //todo change to better names for elements collections
-                if (!elmobjects.ContainsKey(buf))
-                    elmobjects.Add(buf, element);
-            }
-
-
-
-            // if only one elementary object, then use same object for this (as item) and that (as element) 
-            if (elmobjects.Count == 1 && str.Length == 1 && str[0] != '*')
-            {
-                elmobjects.Clear();
-                elmobjects.Add(this.KeyString, this);
-                this.AddNodeType(HasseNodeTypes.ELEMENT);
-            }
-
-            return elmobjects;
-        }
-
-
 
         public override bool IsLargerThan(HasseNode smallHasseElement)
 
@@ -281,12 +230,14 @@ namespace HasseManager
             //also something must correspond to the stars
             //we test all matchings 
 
+            /*
             if (smallHasseElement.elementCount() > this.elementCount())
             {
                 // must be smaller
                 Debug.WriteLineIf(DBG, this.KeyString + " is not larger than " + smallHasseElement.KeyString + " (0)");
                 return false;
             }
+            */
 
 
             StringHasseNode smallStringHasseNode = (StringHasseNode)smallHasseElement;
@@ -339,7 +290,6 @@ namespace HasseManager
         }
 
 
-
         private bool TestStringMappingForMatch(string str, string SmallString, string StrippedSmallString, int offset)
         {
 #if DEBUG
@@ -386,167 +336,10 @@ namespace HasseManager
             return false;
         }
 
-
-        public override string KeyString
-        {
-            get { return str; }
-        }
-
         public  string ID
         {
             get { return base.ID.ToString(); }
         }
-
-
-        public class StringMatcher
-        {
-            Match M;
-            public void Initialise(string SearchString,  string StringA, string StringB)
-            {
-                M = new Match(SearchString , 0 ,0,StringA ,0,0 ,StringB   );
-                M.LastPosInA = M.StrA.Length - 1; 
-            }
-
-            public Match CurrentMatch()
-            {
-                return M;
-            }
-            public bool  FindNextSubstringMatch()
-            {
-                M.FirstPosInB = M.StrB.IndexOf(M.StrA, M.FirstPosInB);
-                if (M.FirstPosInB > -1) { return true; };
-                return false;
-            }
-
-        }
-
-
-        public class Match {
-            public string SearchString;
-            public int FirstPosInA;
-            public int FirstPosInB;
-            public int LastPosInA;
-            public int LastPosInB;
-            public string StrA;
-            public string StrB;
-
-            public Match(string SearchString, int FirstPosInA, int LastPosInA, string StrA,  int FirstPosInB, int LastPosInB, string StrB)
-            {
-                
-                this.FirstPosInA = FirstPosInA;
-                this.FirstPosInB = FirstPosInB;
-                this.LastPosInA = LastPosInA;
-                this.LastPosInB = LastPosInB;
-                this.StrA =StrA ;
-                this.StrB = StrB;
-                this.SearchString = SearchString;
-        }
-           
-
-
-            public void ExpandMCSMatch()
-            {
-                // we already know this describes a match, but we started with a seed possibly
-                // smaller than full matching region, try to expand to left and right...
-                int leftoffs = 0;
-                do
-                { // perhaps there is match also to the left of where seed and str1/str2 match ?
-                    leftoffs += 1;
-                    if (FirstPosInA - leftoffs < 0) //before start of string 1
-                        break;
-                    if (FirstPosInB - leftoffs < 0) //before start of string 2
-                        break;
-                } while (StrA.Substring(FirstPosInA - leftoffs, 1).Equals(StrB.Substring(FirstPosInB - leftoffs, 1)));
-                leftoffs -= 1; //move back one step to where it last was ok
-
-
-                
-                int rightoffs = 0;
-                do
-                { // perhaps there is match also to the right of where seed and str1/str2 match ?
-                    rightoffs += 1;
-                    if (FirstPosInA + rightoffs >= StrA.Length) // after end of string 1
-                        break;
-                    if (FirstPosInB + rightoffs >= StrB.Length) // after end of string 2
-                        break;
-                } while (StrA.Substring(FirstPosInA + rightoffs, 1).Equals(StrB.Substring(FirstPosInB + rightoffs, 1)));
-                rightoffs -= 1; //move back one step to where it last was ok
-           //     if (StrA.StartsWith("beg") && StrB.StartsWith("beg"))
-             //       System.Diagnostics.Debugger.Break();   
-
-                // adjust match object
-                LastPosInA = FirstPosInA + rightoffs;
-                LastPosInB = FirstPosInB + rightoffs;
-
-                FirstPosInA -= leftoffs;
-                FirstPosInB -= leftoffs;
-            }
-
-            public string GetMatchString()
-            {
-                return StrA.Substring(FirstPosInA, MatchStringLength());
-            }
-         
-            public int MatchStringLength()
-            {
-                return LastPosInA - FirstPosInA + 1; 
-            }
-
-            public List<string> DifferenceStrings()
-            {
-                List<string> DiffStringList = new List<string >();
-                //+ strSeed.Length
-                //A to left - do we have one or more chars to left? last is not star?
-                if (FirstPosInA >0  && (! StrA.Substring(FirstPosInA  - 1, 1).Equals("*")))
-                {
-                    string sl1 = StrA.Substring(0, FirstPosInA ) + "*";
-                    DiffStringList.Add(sl1);
-                }
-
-                // B to left
-                if (FirstPosInB > 0 && (!StrB.Substring(FirstPosInB - 1, 1).Equals("*")))
-                {
-                    string sl2 = StrB.Substring(0, FirstPosInB) + "*";
-                    DiffStringList.Add(sl2);
-                }
-
-                //pos1 right
-                if (LastPosInA +1 < StrA.Length && (!StrA.Substring(LastPosInA+1,1  ).Equals ("*")    ))
-                {
-                    string sr1 = "*" + StrA.Substring(LastPosInA + 1);
-                    DiffStringList.Add(sr1);
-                }
-                //pos2 right
-                if (LastPosInB +1 < StrB.Length && (!StrB.Substring(LastPosInB+1,1  ).Equals ("*")    ) )
-                {
-                    string sr2 = "*" + StrB.Substring(LastPosInB + 1);
-                    DiffStringList.Add(sr2);
-                }
-
-                return DiffStringList; 
-            }
-        }
-
-        public override  HasseFingerprint CreateFingerprint()
-        {
-            StringHasseFingerprint fp = new StringHasseFingerprint();
-            return fp;
-        }
-
     }
-
-
-    public  class StringHasseFingerprint:HasseFingerprint
-    {
-        public override void AddBitsOf(HasseFingerprint F)
-        {
-            throw new NotImplementedException();
-        }
-        public override bool ContainsAllBitsOf(HasseFingerprint F)
-        {
-            throw new NotImplementedException();
-        }
-    }
-
 
 }

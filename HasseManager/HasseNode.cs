@@ -30,25 +30,21 @@ namespace HasseManager
         public enum HasseNodeTypes
         {
             // A node can have more than one type, use bitwise AND or OR.
-            ROOT = 0,
-            ELEMENT = 1,
-            FRAGMENT = 2,
-            MAX_COMMON_FRAGMENT = 4,
-            DIFFERENCE_FRAGMENT = 8,
-            REAL = 16
+            ROOT = 1,
+            //ELEMENT = 2,
+            FRAGMENT = 4,
+            MAX_COMMON_FRAGMENT = 8,
+            DIFFERENCE_FRAGMENT = 16,
+            REAL = 32
         }
 
         public List<HasseEdge> linkedEdges = new List<HasseEdge>();
         public List<HasseEdge> EdgesToCovering = new List<HasseEdge>();
         public List<HasseEdge> EdgesToCovered = new List<HasseEdge>();
 
-        public HasseFingerprint BitArrayFingerPrint;
-
-        // elementary objects to be instantiated lazily when needed
-        private Dictionary<string, HasseNode> m_elementarysubobjects;
+        //public HasseFingerprint BitArrayFingerPrint;
 
         // passed in to constructor, needed to avoid creation of duplicate objects
-        private HasseNodeCollection globalElementCollection;
         public string DrawingColor = "";
         public int w = 0;
         public int x = 0;
@@ -62,18 +58,18 @@ namespace HasseManager
         protected int ID;
         protected int size;
         protected string Name;
+        protected string keystring;
         protected Int64 _hash;
         public string ImageFileName = "";
         public string LabelText;
 
         internal HasseNodeTypes NodeType;
 
-        public HasseNode(HasseNodeTypes Type, HasseNodeCollection Elements, string debugInfo)
+        public HasseNode(HasseNodeTypes Type,  string debugInfo)
         {
             counterForID += 1;
             ID = counterForID;
             this.NodeType = Type;
-            this.globalElementCollection = Elements;
             if (debugInfo.Length == 0)
                 debugInfo = ID.ToString();
             this.LabelText = debugInfo;
@@ -217,7 +213,7 @@ namespace HasseManager
         {
             foreach (HasseEdge cover in EdgesToCovering)
             {
-                foreach (HasseEdge _cover in EdgesToCovered)
+                foreach (HasseEdge _cover in EdgesToCovering)
                 {
                     if ((!object.ReferenceEquals(cover.UpperNode, _cover.UpperNode)))
                     {
@@ -242,68 +238,22 @@ namespace HasseManager
             return true;
         }
 
-        public abstract int elementCount();
+       // public abstract int elementCount();
         public abstract bool IsLargerThan(HasseNode smallobj);
-        public abstract string KeyString { get; }
-        public abstract void CreateImage();
-        public abstract void CreateImage(float weight);
         public abstract bool GetMaxCommonFragments(HasseNode Node1, HasseNode Node2, bool dbg, HasseFragmentInsertionQueue NewFragmentList, int MinimumOverlap);
         public abstract string[] GetDifferenceString(HasseNode LargerNode);
-        protected abstract Dictionary<string, HasseNode> makeElementarySubobjects(HasseNodeCollection GlobalHasseVertexObjectCollection);
 
 
-        public  bool ContainsAllElementsIn(HasseNodeCollection col)
+        public string KeyString
         {
-            foreach (HasseNode n in col.Values)
-            {
-                if (!getElementarySubobjects().Values.Contains(n))
-                    return false;
-            }
-            return true;
+            get { return keystring; }
         }
 
-        public Dictionary<string, HasseNode> getElementarySubobjects()
-        {
-            if (m_elementarysubobjects == null)
-            {
-                m_elementarysubobjects = makeElementarySubobjects(globalElementCollection);
-            }
-            return m_elementarysubobjects;
-        }
-
-        public bool HasElement(HasseNode N)
-        {
-            if (m_elementarysubobjects.ContainsKey(N.KeyString)) { return true; } else { return false; }
-        }
         // Implement IComparable CompareTo method - provide default sort order.
         int IComparable.CompareTo(object node)
         {
             HasseNode Node = (HasseNode)node;
             return String.Compare(this.KeyString, Node.KeyString);
-        }
-
-        public bool HasElements(HasseNode[] Nodes)
-        {
-            foreach (HasseNode N in Nodes) // do this have all of these?
-            {
-                if (!this.HasElement(N))
-                {
-                    return false;
-                }
-            }
-            return true;
-        }
-
-        public bool HasOneOfElements(HasseNode[] Nodes)
-        {
-            foreach (HasseNode N in Nodes)
-            {
-                if (this.HasElement(N))
-                {
-                    return true;
-                }
-            }
-            return false;
         }
 
 
@@ -362,12 +312,7 @@ namespace HasseManager
         }
 
         // require derived classes can create empty fingerprints
-        public abstract HasseFingerprint CreateFingerprint();
-    }
-    public abstract class HasseFingerprint
-    {
-        public abstract void AddBitsOf(HasseFingerprint F);
-        public abstract bool ContainsAllBitsOf(HasseFingerprint F);
+        //public abstract HasseFingerprint CreateFingerprint();
     }
 
 }

@@ -36,7 +36,7 @@ namespace HasseManager
             System.Diagnostics.Debug.WriteLine("QueryMol 2: " + qmol.smiles());
             System.Diagnostics.Debug.WriteLine("Largermol is : " + mol.smiles());
 
-            IndigoObject matcher = indigo.substructureMatcher(mol, ChemHasseNode.SUBSTRUCTURE_MATCH_PARAM);
+            IndigoObject matcher = indigo.substructureMatcher(mol);
             indigo.setOption("embedding-uniqueness", "atoms");
             foreach (IndigoObject m in matcher.iterateMatches(qmol))
             {

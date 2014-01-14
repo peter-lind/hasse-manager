@@ -28,7 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
-            this.button1 = new System.Windows.Forms.Button();
+            this.cmdRunDot = new System.Windows.Forms.Button();
             this.openFileDialog1 = new System.Windows.Forms.OpenFileDialog();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
             this.ButtonWordFragmentation = new System.Windows.Forms.Button();
@@ -38,15 +38,15 @@
             this.groupBox2.SuspendLayout();
             this.SuspendLayout();
             // 
-            // button1
+            // cmdRunDot
             // 
-            this.button1.Location = new System.Drawing.Point(57, 88);
-            this.button1.Name = "button1";
-            this.button1.Size = new System.Drawing.Size(140, 46);
-            this.button1.TabIndex = 0;
-            this.button1.Text = "button1";
-            this.button1.UseVisualStyleBackColor = true;
-            this.button1.Click += new System.EventHandler(this.button1_Click);
+            this.cmdRunDot.Location = new System.Drawing.Point(52, 179);
+            this.cmdRunDot.Name = "cmdRunDot";
+            this.cmdRunDot.Size = new System.Drawing.Size(140, 46);
+            this.cmdRunDot.TabIndex = 0;
+            this.cmdRunDot.Text = "Run Dot";
+            this.cmdRunDot.UseVisualStyleBackColor = true;
+            this.cmdRunDot.Click += new System.EventHandler(this.button1_Click);
             // 
             // openFileDialog1
             // 
@@ -55,7 +55,7 @@
             // groupBox1
             // 
             this.groupBox1.Controls.Add(this.ButtonWordFragmentation);
-            this.groupBox1.Location = new System.Drawing.Point(250, 18);
+            this.groupBox1.Location = new System.Drawing.Point(49, 15);
             this.groupBox1.Name = "groupBox1";
             this.groupBox1.Size = new System.Drawing.Size(186, 70);
             this.groupBox1.TabIndex = 2;
@@ -75,9 +75,9 @@
             // groupBox2
             // 
             this.groupBox2.Controls.Add(this.button2);
-            this.groupBox2.Location = new System.Drawing.Point(253, 119);
+            this.groupBox2.Location = new System.Drawing.Point(253, 15);
             this.groupBox2.Name = "groupBox2";
-            this.groupBox2.Size = new System.Drawing.Size(182, 65);
+            this.groupBox2.Size = new System.Drawing.Size(182, 70);
             this.groupBox2.TabIndex = 3;
             this.groupBox2.TabStop = false;
             this.groupBox2.Text = "Read file with chemistry";
@@ -99,7 +99,7 @@
             this.ClientSize = new System.Drawing.Size(490, 262);
             this.Controls.Add(this.groupBox2);
             this.Controls.Add(this.groupBox1);
-            this.Controls.Add(this.button1);
+            this.Controls.Add(this.cmdRunDot);
             this.Name = "Form1";
             this.Text = "Form1";
             this.groupBox1.ResumeLayout(false);
@@ -110,7 +110,7 @@
 
         #endregion
 
-        private System.Windows.Forms.Button button1;
+        private System.Windows.Forms.Button cmdRunDot;
         private System.Windows.Forms.OpenFileDialog openFileDialog1;
         private System.Windows.Forms.GroupBox groupBox1;
         private System.Windows.Forms.Button ButtonWordFragmentation;

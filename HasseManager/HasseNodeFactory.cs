@@ -12,28 +12,33 @@ namespace HasseManager
         public enum NodeType
         {
             STRING,
-            CHEM
+            CHEM,
+            FINGERPRINTCHEM
         }
-        HasseNodeCollection elementsCollection;
+        //HasseNodeCollection elementsCollection;
 
-        public HasseNodeFactory(NodeType t, HasseNodeCollection elements)
+        public HasseNodeFactory(NodeType t)
         {
             nType = t;
-            elementsCollection = elements;
+         //   elementsCollection = elements;
         }
 
 
         public HasseNode NewNode(string s, HasseNode.HasseNodeTypes e, string debugInfo)
+            // make node based on string
         {
 
             switch (nType)
             {
                 case NodeType.STRING  :
-                    StringHasseNode SN = new StringHasseNode(s, e, elementsCollection,debugInfo);
+                    StringHasseNode SN = new StringHasseNode(s, e, debugInfo);
                     return SN;
                 case NodeType.CHEM  :
-                    ChemHasseNode CN = new ChemHasseNode(s, e, elementsCollection, debugInfo);
+                    ChemHasseNode CN = new ChemHasseNode(s, e,  debugInfo);
                     return CN;
+                case  NodeType.FINGERPRINTCHEM :
+                    FingerprintChemHasseNode FPC = new FingerprintChemHasseNode(s, e,  debugInfo);
+                    return FPC;
                 default :
                     throw new Exception ("HasseNodeFactory: unhandled NodeType");
             }
@@ -42,15 +47,18 @@ namespace HasseManager
 
         public HasseNode NewNode(object  o, HasseNode.HasseNodeTypes e, string debugInfo)
         {
-
+            // make node based on object of a class that the node implementing class knows about
             switch (nType)
             {
                 case NodeType.STRING:
-                    StringHasseNode SN = new StringHasseNode((string) o, e, elementsCollection, debugInfo);
+                    StringHasseNode SN = new StringHasseNode((string) o, e, debugInfo);
                     return SN;
                 case NodeType.CHEM:
-                    ChemHasseNode CN = new ChemHasseNode((IndigoObject )o, e, elementsCollection, debugInfo);
+                    ChemHasseNode CN = new ChemHasseNode((IndigoChemistry )o, e,  debugInfo);
                     return CN;
+                case NodeType.FINGERPRINTCHEM:
+                    FingerprintChemHasseNode FPC = new FingerprintChemHasseNode((IndigoChemistry)o, e,  debugInfo);
+                    return FPC;
                 default:
                     throw new Exception("HasseNodeFactory: unhandled NodeType");
             }
